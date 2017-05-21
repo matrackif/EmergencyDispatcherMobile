@@ -1,33 +1,6 @@
-/*****************************************************************
-JADE - Java Agent DEvelopment Framework is a framework to develop 
-multi-agent systems in compliance with the FIPA specifications.
-Copyright (C) 2000 CSELT S.p.A. 
 
-GNU Lesser General Public License
+package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation, 
-version 2.1 of the License. 
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA  02111-1307, USA.
- *****************************************************************/
-package pl.edu.pw.student.mini.chatapplication;
-
-import java.util.logging.Level;
-
-import jade.core.MicroRuntime;
-import jade.util.Logger;
-import jade.wrapper.ControllerException;
-import jade.wrapper.StaleProxyException;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -40,11 +13,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-/**
- * This activity implement the participants interface.
- * 
- * @author Michele Izzo - Telecomitalia
- */
+import java.util.logging.Level;
+
+import jade.core.MicroRuntime;
+import jade.util.Logger;
+import jade.wrapper.ControllerException;
+import jade.wrapper.StaleProxyException;
 
 public class ParticipantsActivity extends ListActivity {
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
@@ -52,7 +26,7 @@ public class ParticipantsActivity extends ListActivity {
 	private MyReceiver myReceiver;
 
 	private String nickname;
-	private ChatClientInterface chatClientInterface;
+	private ClientInterface clientInterface;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -64,8 +38,8 @@ public class ParticipantsActivity extends ListActivity {
 		}
 
 		try {
-			chatClientInterface = MicroRuntime.getAgent(nickname)
-					.getO2AInterface(ChatClientInterface.class);
+			clientInterface = MicroRuntime.getAgent(nickname)
+					.getO2AInterface(ClientInterface.class);
 		} catch (StaleProxyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,13 +52,13 @@ public class ParticipantsActivity extends ListActivity {
 
 		IntentFilter refreshParticipantsFilter = new IntentFilter();
 		refreshParticipantsFilter
-				.addAction("jade.demo.chat.REFRESH_PARTICIPANTS");
+				.addAction("jade.demo.dipatcher.REFRESH_PARTICIPANTS");
 		registerReceiver(myReceiver, refreshParticipantsFilter);
 
 		setContentView(R.layout.participants);
 
 		setListAdapter(new ArrayAdapter<String>(this, R.layout.participant,
-				chatClientInterface.getParticipantNames()));
+				clientInterface.getParticipantNames()));
 
 		ListView listView = getListView();
 		listView.setTextFilterEnabled(true);
@@ -113,10 +87,10 @@ public class ParticipantsActivity extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.chat.REFRESH_PARTICIPANTS")) {
+			if (action.equalsIgnoreCase("jade.demo.dipatcher.REFRESH_PARTICIPANTS")) {
 				setListAdapter(new ArrayAdapter<String>(
 						ParticipantsActivity.this, R.layout.participant,
-						chatClientInterface.getParticipantNames()));
+						clientInterface.getParticipantNames()));
 			}
 		}
 	}

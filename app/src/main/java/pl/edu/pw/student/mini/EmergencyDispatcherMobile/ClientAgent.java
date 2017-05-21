@@ -1,31 +1,15 @@
-/*****************************************************************
-JADE - Java Agent DEvelopment Framework is a framework to develop 
-multi-agent systems in compliance with the FIPA specifications.
-Copyright (C) 2000 CSELT S.p.A. 
 
-GNU Lesser General Public License
+package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation, 
-version 2.1 of the License. 
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA  02111-1307, USA.
- *****************************************************************/
-
-package pl.edu.pw.student.mini.chatapplication;
+import android.content.Context;
+import android.content.Intent;
 
 import java.util.List;
 import java.util.logging.Level;
 
+import chat.ontology.ChatOntology;
+import chat.ontology.Joined;
+import chat.ontology.Left;
 import jade.content.ContentManager;
 import jade.content.Predicate;
 import jade.content.lang.Codec;
@@ -41,26 +25,8 @@ import jade.util.Logger;
 import jade.util.leap.Iterator;
 import jade.util.leap.Set;
 import jade.util.leap.SortedSetImpl;
-import chat.ontology.ChatOntology;
-import chat.ontology.Joined;
-import chat.ontology.Left;
-import android.content.Intent;
-import android.content.Context;
 
-/**
- * This agent implements the logic of the chat client running on the user
- * terminal. User interactions are handled by the ChatGui in a
- * terminal-dependent way. The ChatClientAgent performs 3 types of behaviours: -
- * ParticipantsManager. A CyclicBehaviour that keeps the list of participants up
- * to date on the basis of the information received from the ChatManagerAgent.
- * This behaviour is also in charge of subscribing as a participant to the
- * ChatManagerAgent. - ChatListener. A CyclicBehaviour that handles messages
- * from other chat participants. - ChatSpeaker. A OneShotBehaviour that sends a
- * message conveying a sentence written by the user to other chat participants.
- * 
- * @author Giovanni Caire - TILAB
- */
-public class ChatClientAgent extends Agent implements ChatClientInterface {
+public class ClientAgent extends Agent implements ClientInterface {
 	private static final long serialVersionUID = 1594371294421614291L;
 
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
@@ -98,34 +64,35 @@ public class ChatClientAgent extends Agent implements ChatClientInterface {
 		spokenMsg.setConversationId(CHAT_ID);
 
 		// Activate the GUI
-		registerO2AInterface(ChatClientInterface.class, this);
+		registerO2AInterface(ClientInterface.class, this);
 		
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.chat.SHOW_CHAT");
+		broadcast.setAction("jade.demo.dipatcher.SHOW_CHAT");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 
 	protected void takeDown() {
+
 	}
 
 	private void notifyParticipantsChanged() {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.chat.REFRESH_PARTICIPANTS");
+		broadcast.setAction("jade.demo.dipatcher.REFRESH_PARTICIPANTS");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 
 	private void notifySpoken(String speaker, String sentence) {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.chat.REFRESH_CHAT");
+		broadcast.setAction("jade.demo.dipatcher.REFRESH_CHAT");
 		broadcast.putExtra("sentence", speaker + ": " + sentence + "\n");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 	
 	/**
-	 * Inner class ParticipantsManager. This behaviour registers as a chat
+	 * Inner class ParticipantsManager. This behaviour registers as a dipatcher
 	 * participant and keeps the list of participants up to date by managing the
 	 * information received from the ChatManager agent.
 	 */
@@ -138,7 +105,7 @@ public class ChatClientAgent extends Agent implements ChatClientInterface {
 		}
 
 		public void onStart() {
-			// Subscribe as a chat participant to the ChatManager agent
+			// Subscribe as a dipatcher participant to the ChatManager agent
 			ACLMessage subscription = new ACLMessage(ACLMessage.SUBSCRIBE);
 			subscription.setLanguage(codec.getName());
 			subscription.setOntology(onto.getName());
@@ -154,7 +121,7 @@ public class ChatClientAgent extends Agent implements ChatClientInterface {
 
 		public void action() {
 			// Receives information about people joining and leaving
-			// the chat from the ChatManager agent
+			// the dipatcher from the ChatManager agent
 			ACLMessage msg = myAgent.receive(template);
 			if (msg != null) {
 				if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -188,7 +155,7 @@ public class ChatClientAgent extends Agent implements ChatClientInterface {
 	} // END of inner class ParticipantsManager
 
 	/**
-	 * Inner class ChatListener. This behaviour registers as a chat participant
+	 * Inner class ChatListener. This behaviour registers as a dipatcher participant
 	 * and keeps the list of participants up to date by managing the information
 	 * received from the ChatManager agent.
 	 */

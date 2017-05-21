@@ -1,40 +1,7 @@
-/*****************************************************************
-JADE - Java Agent DEvelopment Framework is a framework to develop 
-multi-agent systems in compliance with the FIPA specifications.
-Copyright (C) 2000 CSELT S.p.A. 
 
-GNU Lesser General Public License
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation, 
-version 2.1 of the License. 
+package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA  02111-1307, USA.
- *****************************************************************/
-
-package pl.edu.pw.student.mini.chatapplication;
-
-import java.util.logging.Level;
-
-import jade.android.AndroidHelper;
-import jade.android.MicroRuntimeService;
-import jade.android.MicroRuntimeServiceBinder;
-import jade.android.RuntimeCallback;
-import jade.core.MicroRuntime;
-import jade.core.Profile;
-import jade.util.Logger;
-import jade.util.leap.Properties;
-import jade.wrapper.AgentController;
-import jade.wrapper.ControllerException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -58,11 +25,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-/**
- * This activity implement the main interface.
- * 
- * @author Michele Izzo - Telecomitalia
- */
+import java.util.logging.Level;
+
+import jade.android.AndroidHelper;
+import jade.android.MicroRuntimeService;
+import jade.android.MicroRuntimeServiceBinder;
+import jade.android.RuntimeCallback;
+import jade.core.MicroRuntime;
+import jade.core.Profile;
+import jade.util.Logger;
+import jade.util.leap.Properties;
+import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
 
 public class MainActivity extends Activity {
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
@@ -87,11 +61,11 @@ public class MainActivity extends Activity {
 		myReceiver = new MyReceiver();
 
 		IntentFilter killFilter = new IntentFilter();
-		killFilter.addAction("jade.demo.chat.KILL");
+		killFilter.addAction("jade.demo.dipatcher.KILL");
 		registerReceiver(myReceiver, killFilter);
 
 		IntentFilter showChatFilter = new IntentFilter();
-		showChatFilter.addAction("jade.demo.chat.SHOW_CHAT");
+		showChatFilter.addAction("jade.demo.dipatcher.SHOW_CHAT");
 		registerReceiver(myReceiver, showChatFilter);
 
 		myHandler = new MyHandler();
@@ -140,7 +114,7 @@ public class MainActivity extends Activity {
 							+ " " + host + ":" + port + "...");
 					startChat(nickname, host, port, agentStartupCallback);
 				} catch (Exception ex) {
-					logger.log(Level.SEVERE, "Unexpected exception creating chat agent!");
+					logger.log(Level.SEVERE, "Unexpected exception creating dipatcher agent!");
 					infoTextView.setText(getString(R.string.msg_unexpected));
 				}
 			}
@@ -174,7 +148,7 @@ public class MainActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == CHAT_REQUEST) {
 			if (resultCode == RESULT_CANCELED) {
-				// The chat activity was closed.
+				// The dipatcher activity was closed.
 				infoTextView.setText("");
 				logger.log(Level.INFO, "Stopping Jade...");
 				microRuntimeServiceBinder
@@ -186,7 +160,7 @@ public class MainActivity extends Activity {
 							@Override
 							public void onFailure(Throwable throwable) {
 								logger.log(Level.SEVERE, "Failed to stop the "
-										+ ChatClientAgent.class.getName()
+										+ ClientAgent.class.getName()
 										+ "...");
 								agentStartupCallback.onFailure(throwable);
 							}
@@ -225,12 +199,12 @@ public class MainActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.chat.KILL")) {
+			if (action.equalsIgnoreCase("jade.demo.dipatcher.KILL")) {
 				finish();
 			}
-			if (action.equalsIgnoreCase("jade.demo.chat.SHOW_CHAT")) {
+			if (action.equalsIgnoreCase("jade.demo.dipatcher.SHOW_CHAT")) {
 				Intent showChat = new Intent(MainActivity.this,
-						ChatActivity.class);
+						DispatchActivity.class);
 				showChat.putExtra("nickname", nickname);
 				MainActivity.this
 						.startActivityForResult(showChat, CHAT_REQUEST);
@@ -326,13 +300,13 @@ public class MainActivity extends Activity {
 	private void startAgent(final String nickname,
 			final RuntimeCallback<AgentController> agentStartupCallback) {
 		microRuntimeServiceBinder.startAgent(nickname,
-				ChatClientAgent.class.getName(),
+				ClientAgent.class.getName(),
 				new Object[] { getApplicationContext() },
 				new RuntimeCallback<Void>() {
 					@Override
 					public void onSuccess(Void thisIsNull) {
 						logger.log(Level.INFO, "Successfully start of the "
-								+ ChatClientAgent.class.getName() + "...");
+								+ ClientAgent.class.getName() + "...");
 						try {
 							agentStartupCallback.onSuccess(MicroRuntime
 									.getAgent(nickname));
@@ -345,7 +319,7 @@ public class MainActivity extends Activity {
 					@Override
 					public void onFailure(Throwable throwable) {
 						logger.log(Level.SEVERE, "Failed to start the "
-								+ ChatClientAgent.class.getName() + "...");
+								+ ClientAgent.class.getName() + "...");
 						agentStartupCallback.onFailure(throwable);
 					}
 				});

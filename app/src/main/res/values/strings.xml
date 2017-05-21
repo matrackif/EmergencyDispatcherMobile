@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Jade Chat</string>
-    <string name="app_title_main">Jade Chat</string>
-    <string name="app_title_settings">Jade Chat Settings</string>    
-    <string name="app_title_chat">Jade Chat Room</string>    
-    <string name="app_title_participants">Jade Chat Participants</string>    
+    <string name="app_name">Emergency Dispatcher Mobile</string>
+    <string name="app_title_main">Emergency Dispatcher Mobile</string>
+    <string name="app_title_settings">Settings</string>
+    <string name="app_title_chat">Room</string>
+    <string name="app_title_participants">Participants</string>
 
-    <string name="label_nick">Enter Nickname</string>
+    <string name="label_nick">Enter Username</string>
     <string name="label_host">Host</string>
     <string name="label_port">Port</string>
     
-    <string name="button_login">  chat!  </string>
+    <string name="button_login">Login</string>
     <string name="button_send">send!</string>
-    <string name="button_use">  use  </string>
+    <string name="button_use"> use </string>
 
     <string name="menu_settings">settings</string>
     <string name="menu_exit">exit</string>
