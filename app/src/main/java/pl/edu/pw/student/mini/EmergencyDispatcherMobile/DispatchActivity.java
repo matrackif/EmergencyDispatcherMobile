@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,9 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import java.util.logging.Level;
 
@@ -58,20 +54,13 @@ public class DispatchActivity extends Activity {
 
 		myReceiver = new MyReceiver();
 
-		IntentFilter refreshChatFilter = new IntentFilter();
-		refreshChatFilter.addAction("jade.demo.dispatcher.REFRESH_CHAT");
-		registerReceiver(myReceiver, refreshChatFilter);
-
-		IntentFilter clearChatFilter = new IntentFilter();
-		clearChatFilter.addAction("jade.demo.dispatcher.CLEAR_CHAT");
-		registerReceiver(myReceiver, clearChatFilter);
-
 		setContentView(R.layout.dispatcher);
 
-		Button button = (Button) findViewById(R.id.button_send);
-		button.setOnClickListener(buttonSendListener);
+		Button buttonPolice = (Button) findViewById(R.id.button_police);
+		Button buttonFire = (Button) findViewById(R.id.button_fire);
+		buttonFire.setOnClickListener(FireSendListener);
+		buttonPolice.setOnClickListener(PoliceSendListener);
 	}
-
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -80,15 +69,14 @@ public class DispatchActivity extends Activity {
 
 		logger.log(Level.INFO, "Destroy activity!");
 	}
-
-	private OnClickListener buttonSendListener = new OnClickListener() {
+	private OnClickListener FireSendListener = new OnClickListener() {
 		public void onClick(View v) {
-			final EditText messageField = (EditText) findViewById(R.id.edit_message);
-			String message = messageField.getText().toString();
+
+			String message = "HELP!!!";
 			if (message != null && !message.equals("")) {
 				try {
 					clientInterface.handleSpoken(message);
-					messageField.setText("");
+
 				} catch (O2AException e) {
 					showAlertDialog(e.getMessage(), false);
 				}
@@ -97,13 +85,27 @@ public class DispatchActivity extends Activity {
 		}
 	};
 
+	private OnClickListener PoliceSendListener = new OnClickListener() {
+		public void onClick(View v) {
+
+			String message = "HELP!!!";
+			if (message != null && !message.equals("")) {
+				try {
+					clientInterface.handleSpoken(message);
+
+				} catch (O2AException e) {
+					showAlertDialog(e.getMessage(), false);
+				}
+			}
+
+		}
+	};
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.room_menu, menu);
 		return true;
 	}
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -113,69 +115,27 @@ public class DispatchActivity extends Activity {
 			showParticipants.putExtra("nickname", nickname);
 			startActivityForResult(showParticipants, PARTICIPANTS_REQUEST);
 			return true;
-		case R.id.menu_clear:
-			/*
-			Intent broadcast = new Intent();
-			broadcast.setAction("jade.demo.dispatcher.CLEAR_CHAT");
-			logger.info("Sending broadcast " + broadcast.getAction());
-			sendBroadcast(broadcast);
-			*/
-			final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-			chatField.setText("");
-			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PARTICIPANTS_REQUEST) {
 			if (resultCode == RESULT_OK) {
-				// TODO: A partecipant was picked. Send a private message.
+				// TODO: A participant was picked. Send a private message.
 			}
 		}
 	}
-
 	private class MyReceiver extends BroadcastReceiver {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.dispatcher.REFRESH_CHAT")) {
-				final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-				chatField.append(intent.getExtras().getString("sentence"));
-				scrollDown();
-			}
-			if (action.equalsIgnoreCase("jade.demo.dispatcher.CLEAR_CHAT")) {
-				final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-				chatField.setText("");
-			}
+
 		}
 	}
-
-	private void scrollDown() {
-		final ScrollView scroller = (ScrollView) findViewById(R.id.scroller);
-		final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-		scroller.smoothScrollTo(0, chatField.getBottom());
-	}
-
-	@Override
-	public void onSaveInstanceState(Bundle savedInstanceState) {
-		final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-		savedInstanceState.putString("chatField", chatField.getText()
-				.toString());
-		super.onSaveInstanceState(savedInstanceState);
-	}
-
-	@Override
-	public void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
-		final TextView chatField = (TextView) findViewById(R.id.chatTextView);
-		chatField.setText(savedInstanceState.getString("chatField"));
-	}
-
 	private void showAlertDialog(String message, final boolean fatal) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(
 				DispatchActivity.this);

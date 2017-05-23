@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import chat.ontology.ChatOntology;
@@ -133,10 +134,8 @@ public class ClientAgent extends Agent implements ClientInterface {
 						if(p instanceof Joined) {
 							Joined joined = (Joined) p;
 							List<AID> aid = (List<AID>) joined.getWho();
-
 							for(AID a : aid)
 							{
-//								participants.add(a);
 								String[] codedMsg = a.getName().split("_");
 								String agentName = codedMsg[0];
 								String agentType = codedMsg[1];
@@ -207,33 +206,22 @@ public class ClientAgent extends Agent implements ClientInterface {
 	 */
 	private class ChatSpeaker extends OneShotBehaviour {
 		private static final long serialVersionUID = -1426033904935339194L;
-//		private String sentence;
+		private String sentence;
 		private MessageTemplate template;
 		private ChatSpeaker(Agent a, String s) {
 			super(a);
-//			sentence = s;
+			sentence = s;
 		}
 
 		public void action() {
 			spokenMsg.clearAllReceiver();
-//			Iterator it = participants.iterator();
-//			while (it.hasNext()) {
-//				spokenMsg.addReceiver((AID) it.next());
-//			}
-//			spokenMsg.setContent(sentence);
-//			notifySpoken(myAgent.getLocalName(), sentence);
-//			send(spokenMsg);
-			ACLMessage helpQuery = new ACLMessage(ACLMessage.QUERY_IF);
-			helpQuery.setLanguage(codec.getName());
-			helpQuery.setOntology(onto.getName());
-
-			String convId = "C-" + myAgent.getLocalName();
-			helpQuery.setConversationId(convId);
-			helpQuery
-					.addReceiver(new AID(CHAT_MANAGER_NAME, AID.ISLOCALNAME));
-			myAgent.send(helpQuery);
-			// Initialize the template used to receive notifications
-			// from the ChatManagerAgent
+			Iterator it = participants.iterator();
+			while (it.hasNext()) {
+				spokenMsg.addReceiver((AID) it.next());
+			}
+			spokenMsg.setContent(sentence);
+			notifySpoken(myAgent.getLocalName(), sentence);
+			send(spokenMsg);
 
 		}
 	} // END of inner class ChatSpeaker
@@ -248,17 +236,20 @@ public class ClientAgent extends Agent implements ClientInterface {
 	}
 	
 	public String[] getParticipantNames() {
-		String[] pp = new String[participants.size()];
-		Iterator it = participants.iterator();
+
+		String[] pp = new String[participantAgents.size()];
+		Iterator it = (Iterator) participantAgents.entrySet().iterator();
 		int i = 0;
 		while (it.hasNext()) {
-			AID id = (AID) it.next();
-			pp[i++] = id.getLocalName();
+			Map.Entry pair = (Map.Entry)it.next();
+			pp[i++] = pair.getKey().toString() + "("+pair.getValue()+")";
+			logger.log(Logger.INFO, "Content is: " + pair.getKey() + "("+pair.getValue()+")");
 		}
 		return pp;
+
 	}
 
-	// ///////////////////////////////////////
+	// //////////////////////////////////////
 	// Private utility method
 	// ///////////////////////////////////////
 	private void handleUnexpected(ACLMessage msg) {

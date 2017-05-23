@@ -16,7 +16,8 @@
 	<EditText
 		android:id="@+id/edit_host"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"></EditText>
+		android:layout_height="wrap_content"
+		android:textColor="@android:color/black"></EditText>
 
 	<TextView
 		android:id="@+id/portTextView"
@@ -30,11 +31,12 @@
 		android:id="@+id/edit_port"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:inputType="number"></EditText>
+		android:inputType="number"
+		android:textColor="@android:color/black"></EditText>
 
 	<Button
 		android:id="@+id/button_use"
-		android:layout_width="wrap_content"
+		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center_horizontal"
 		android:text="@string/button_use"></Button>
