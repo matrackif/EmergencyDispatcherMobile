@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -81,6 +82,8 @@ public class MainActivity extends Activity {
 
 		final Spinner postSpinner = (Spinner)findViewById(R.id.edit_post);
 
+		ImageView loginLogo = (ImageView) findViewById(R.id.imageView);
+		loginLogo.setImageResource(R.mipmap.ic_launcher);
 
 
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -92,6 +95,7 @@ public class MainActivity extends Activity {
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				((TextView) parent.getChildAt(0)).setTextColor(Color.BLACK);
 				((TextView) parent.getChildAt(0)).setTextSize(20);
+
 			}
 
 			@Override

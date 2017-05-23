@@ -30,6 +30,7 @@
 
     <string-array name="posts_array">
         <item>User</item>
-        <item>Field Agent</item>
+        <item>Fire Agent</item>
+        <item>Police Agent</item>
     </string-array>
 </resources>

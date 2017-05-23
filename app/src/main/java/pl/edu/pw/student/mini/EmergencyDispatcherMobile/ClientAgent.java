@@ -33,8 +33,10 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private static final String CHAT_ID = "__chat__";
 	private static final String CHAT_MANAGER_NAME = "manager";
+	private String type = "USER_AGENT";
 
 	private Set participants = new SortedSetImpl();
+	private java.util.HashMap<AID,String> participantAgents = new java.util.HashMap<>();
 	private Codec codec = new SLCodec();
 	private Ontology onto = ChatOntology.getInstance();
 	private ACLMessage spokenMsg;
@@ -110,6 +112,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 			subscription.setLanguage(codec.getName());
 			subscription.setOntology(onto.getName());
 			String convId = "C-" + myAgent.getLocalName();
+			subscription.setContent(type);
 			subscription.setConversationId(convId);
 			subscription
 					.addReceiver(new AID(CHAT_MANAGER_NAME, AID.ISLOCALNAME));
@@ -130,15 +133,30 @@ public class ClientAgent extends Agent implements ClientInterface {
 						if(p instanceof Joined) {
 							Joined joined = (Joined) p;
 							List<AID> aid = (List<AID>) joined.getWho();
+
 							for(AID a : aid)
+							{
+//								participants.add(a);
+								String[] codedMsg = a.getName().split("_");
+								String agentName = codedMsg[0];
+								String agentType = codedMsg[1];
+								logger.log(Logger.INFO,agentName + agentType);
+								a.setName(agentName);
+								participantAgents.put(a,agentType);
 								participants.add(a);
+							}
+
 							notifyParticipantsChanged();
 						}
 						if(p instanceof Left) {
 							Left left = (Left) p;
 							List<AID> aid = (List<AID>) left.getWho();
 							for(AID a : aid)
+							{
 								participants.remove(a);
+								participantAgents.remove(a);
+							}
+
 							notifyParticipantsChanged();
 						}
 					} catch (Exception e) {
@@ -189,22 +207,34 @@ public class ClientAgent extends Agent implements ClientInterface {
 	 */
 	private class ChatSpeaker extends OneShotBehaviour {
 		private static final long serialVersionUID = -1426033904935339194L;
-		private String sentence;
-
+//		private String sentence;
+		private MessageTemplate template;
 		private ChatSpeaker(Agent a, String s) {
 			super(a);
-			sentence = s;
+//			sentence = s;
 		}
 
 		public void action() {
 			spokenMsg.clearAllReceiver();
-			Iterator it = participants.iterator();
-			while (it.hasNext()) {
-				spokenMsg.addReceiver((AID) it.next());
-			}
-			spokenMsg.setContent(sentence);
-			notifySpoken(myAgent.getLocalName(), sentence);
-			send(spokenMsg);
+//			Iterator it = participants.iterator();
+//			while (it.hasNext()) {
+//				spokenMsg.addReceiver((AID) it.next());
+//			}
+//			spokenMsg.setContent(sentence);
+//			notifySpoken(myAgent.getLocalName(), sentence);
+//			send(spokenMsg);
+			ACLMessage helpQuery = new ACLMessage(ACLMessage.QUERY_IF);
+			helpQuery.setLanguage(codec.getName());
+			helpQuery.setOntology(onto.getName());
+
+			String convId = "C-" + myAgent.getLocalName();
+			helpQuery.setConversationId(convId);
+			helpQuery
+					.addReceiver(new AID(CHAT_MANAGER_NAME, AID.ISLOCALNAME));
+			myAgent.send(helpQuery);
+			// Initialize the template used to receive notifications
+			// from the ChatManagerAgent
+
 		}
 	} // END of inner class ChatSpeaker
 
