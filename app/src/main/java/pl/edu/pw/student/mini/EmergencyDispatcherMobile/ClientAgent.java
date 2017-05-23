@@ -238,11 +238,12 @@ public class ClientAgent extends Agent implements ClientInterface {
 	public String[] getParticipantNames() {
 
 		String[] pp = new String[participantAgents.size()];
-		Iterator it = (Iterator) participantAgents.entrySet().iterator();
-		int i = 0;
+		java.util.Iterator it = participantAgents.entrySet().iterator();
+		int i =0;
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry)it.next();
-			pp[i++] = pair.getKey().toString() + "("+pair.getValue()+")";
+			AID current = (AID) pair.getKey();
+			pp[i++] = current.getLocalName() + "("+pair.getValue()+")";
 			logger.log(Logger.INFO, "Content is: " + pair.getKey() + "("+pair.getValue()+")");
 		}
 		return pp;
