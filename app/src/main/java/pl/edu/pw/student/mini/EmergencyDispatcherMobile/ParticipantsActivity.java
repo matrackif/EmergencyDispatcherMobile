@@ -52,7 +52,7 @@ public class ParticipantsActivity extends ListActivity {
 
 		IntentFilter refreshParticipantsFilter = new IntentFilter();
 		refreshParticipantsFilter
-				.addAction("jade.demo.dipatcher.REFRESH_PARTICIPANTS");
+				.addAction("jade.demo.dispatcher.REFRESH_PARTICIPANTS");
 		registerReceiver(myReceiver, refreshParticipantsFilter);
 
 		setContentView(R.layout.participants);
@@ -87,7 +87,7 @@ public class ParticipantsActivity extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.dipatcher.REFRESH_PARTICIPANTS")) {
+			if (action.equalsIgnoreCase("jade.demo.dispatcher.REFRESH_PARTICIPANTS")) {
 				setListAdapter(new ArrayAdapter<String>(
 						ParticipantsActivity.this, R.layout.participant,
 						clientInterface.getParticipantNames()));

@@ -7,12 +7,13 @@
     <string name="app_title_participants">Participants</string>
 
     <string name="label_nick">Enter Username</string>
+    <string name="label_post">Choose Your Type</string>
     <string name="label_host">Host</string>
     <string name="label_port">Port</string>
     
     <string name="button_login">Login</string>
-    <string name="button_send">send!</string>
-    <string name="button_use"> use </string>
+    <string name="button_send">Send!</string>
+    <string name="button_use">Save</string>
 
     <string name="menu_settings">settings</string>
     <string name="menu_exit">exit</string>
@@ -26,4 +27,9 @@
     
     <string name="msg_interface_exc">Internal error!</string>
     <string name="msg_controller_exc">Server error!</string>
+
+    <string-array name="posts_array">
+        <item>User</item>
+        <item>Field Agent</item>
+    </string-array>
 </resources>

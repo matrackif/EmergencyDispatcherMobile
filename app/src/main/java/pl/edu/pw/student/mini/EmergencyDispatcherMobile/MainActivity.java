@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,8 +22,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.logging.Level;
@@ -61,11 +65,11 @@ public class MainActivity extends Activity {
 		myReceiver = new MyReceiver();
 
 		IntentFilter killFilter = new IntentFilter();
-		killFilter.addAction("jade.demo.dipatcher.KILL");
+		killFilter.addAction("jade.demo.dispatcher.KILL");
 		registerReceiver(myReceiver, killFilter);
 
 		IntentFilter showChatFilter = new IntentFilter();
-		showChatFilter.addAction("jade.demo.dipatcher.SHOW_CHAT");
+		showChatFilter.addAction("jade.demo.dispatcher.SHOW_CHAT");
 		registerReceiver(myReceiver, showChatFilter);
 
 		myHandler = new MyHandler();
@@ -74,6 +78,28 @@ public class MainActivity extends Activity {
 
 		Button button = (Button) findViewById(R.id.button_chat);
 		button.setOnClickListener(buttonChatListener);
+
+		final Spinner postSpinner = (Spinner)findViewById(R.id.edit_post);
+
+
+
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.posts_array, android.R.layout.simple_spinner_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		postSpinner.setAdapter(adapter);
+		postSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				((TextView) parent.getChildAt(0)).setTextColor(Color.BLACK);
+				((TextView) parent.getChildAt(0)).setTextSize(20);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+
+			}
+		});
+
 
 		infoTextView = (TextView) findViewById(R.id.infoTextView);
 		infoTextView.setText("");
@@ -92,8 +118,6 @@ public class MainActivity extends Activity {
 		if (name == null || name.trim().equals("")) {
 			return false;
 		}
-		// FIXME: should also check that name is composed
-		// of letters and digits only
 		return true;
 	}
 
@@ -114,7 +138,7 @@ public class MainActivity extends Activity {
 							+ " " + host + ":" + port + "...");
 					startChat(nickname, host, port, agentStartupCallback);
 				} catch (Exception ex) {
-					logger.log(Level.SEVERE, "Unexpected exception creating dipatcher agent!");
+					logger.log(Level.SEVERE, "Unexpected exception creating dispatcher agent!");
 					infoTextView.setText(getString(R.string.msg_unexpected));
 				}
 			}
@@ -148,7 +172,7 @@ public class MainActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == CHAT_REQUEST) {
 			if (resultCode == RESULT_CANCELED) {
-				// The dipatcher activity was closed.
+				// The dispatcher activity was closed.
 				infoTextView.setText("");
 				logger.log(Level.INFO, "Stopping Jade...");
 				microRuntimeServiceBinder
@@ -199,10 +223,10 @@ public class MainActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.dipatcher.KILL")) {
+			if (action.equalsIgnoreCase("jade.demo.dispatcher.KILL")) {
 				finish();
 			}
-			if (action.equalsIgnoreCase("jade.demo.dipatcher.SHOW_CHAT")) {
+			if (action.equalsIgnoreCase("jade.demo.dispatcher.SHOW_CHAT")) {
 				Intent showChat = new Intent(MainActivity.this,
 						DispatchActivity.class);
 				showChat.putExtra("nickname", nickname);

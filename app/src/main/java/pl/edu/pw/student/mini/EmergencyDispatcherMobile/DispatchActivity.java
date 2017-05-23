@@ -59,14 +59,14 @@ public class DispatchActivity extends Activity {
 		myReceiver = new MyReceiver();
 
 		IntentFilter refreshChatFilter = new IntentFilter();
-		refreshChatFilter.addAction("jade.demo.dipatcher.REFRESH_CHAT");
+		refreshChatFilter.addAction("jade.demo.dispatcher.REFRESH_CHAT");
 		registerReceiver(myReceiver, refreshChatFilter);
 
 		IntentFilter clearChatFilter = new IntentFilter();
-		clearChatFilter.addAction("jade.demo.dipatcher.CLEAR_CHAT");
+		clearChatFilter.addAction("jade.demo.dispatcher.CLEAR_CHAT");
 		registerReceiver(myReceiver, clearChatFilter);
 
-		setContentView(R.layout.dipatcher);
+		setContentView(R.layout.dispatcher);
 
 		Button button = (Button) findViewById(R.id.button_send);
 		button.setOnClickListener(buttonSendListener);
@@ -116,7 +116,7 @@ public class DispatchActivity extends Activity {
 		case R.id.menu_clear:
 			/*
 			Intent broadcast = new Intent();
-			broadcast.setAction("jade.demo.dipatcher.CLEAR_CHAT");
+			broadcast.setAction("jade.demo.dispatcher.CLEAR_CHAT");
 			logger.info("Sending broadcast " + broadcast.getAction());
 			sendBroadcast(broadcast);
 			*/
@@ -143,12 +143,12 @@ public class DispatchActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.dipatcher.REFRESH_CHAT")) {
+			if (action.equalsIgnoreCase("jade.demo.dispatcher.REFRESH_CHAT")) {
 				final TextView chatField = (TextView) findViewById(R.id.chatTextView);
 				chatField.append(intent.getExtras().getString("sentence"));
 				scrollDown();
 			}
-			if (action.equalsIgnoreCase("jade.demo.dipatcher.CLEAR_CHAT")) {
+			if (action.equalsIgnoreCase("jade.demo.dispatcher.CLEAR_CHAT")) {
 				final TextView chatField = (TextView) findViewById(R.id.chatTextView);
 				chatField.setText("");
 			}

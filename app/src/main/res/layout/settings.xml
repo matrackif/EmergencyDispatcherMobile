@@ -10,7 +10,8 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:text="@string/label_host"
-		android:textAppearance="?android:attr/textAppearanceMedium"></TextView>
+		android:textAppearance="@android:style/TextAppearance.Material.Large"
+		android:textColor="@android:color/black"></TextView>
 
 	<EditText
 		android:id="@+id/edit_host"
@@ -22,7 +23,8 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:text="@string/label_port"
-		android:textAppearance="?android:attr/textAppearanceMedium"></TextView>
+		android:textAppearance="@android:style/TextAppearance.Material.Large"
+		android:textColor="@android:color/black"></TextView>
 
 	<EditText
 		android:id="@+id/edit_port"

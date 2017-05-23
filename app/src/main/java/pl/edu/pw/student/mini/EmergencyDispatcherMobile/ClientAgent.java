@@ -57,7 +57,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		// Add initial behaviours
 		addBehaviour(new ParticipantsManager(this));
-		addBehaviour(new ChatListener(this));
+		addBehaviour(new RequestListener(this));
 
 		// Initialize the message used to convey spoken sentences
 		spokenMsg = new ACLMessage(ACLMessage.INFORM);
@@ -67,7 +67,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		registerO2AInterface(ClientInterface.class, this);
 		
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dipatcher.SHOW_CHAT");
+		broadcast.setAction("jade.demo.dispatcher.SHOW_CHAT");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
@@ -78,21 +78,21 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private void notifyParticipantsChanged() {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dipatcher.REFRESH_PARTICIPANTS");
+		broadcast.setAction("jade.demo.dispatcher.REFRESH_PARTICIPANTS");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 
 	private void notifySpoken(String speaker, String sentence) {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dipatcher.REFRESH_CHAT");
+		broadcast.setAction("jade.demo.dispatcher.REFRESH_CHAT");
 		broadcast.putExtra("sentence", speaker + ": " + sentence + "\n");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 	
 	/**
-	 * Inner class ParticipantsManager. This behaviour registers as a dipatcher
+	 * Inner class ParticipantsManager. This behaviour registers as a dispatcher
 	 * participant and keeps the list of participants up to date by managing the
 	 * information received from the ChatManager agent.
 	 */
@@ -105,7 +105,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		}
 
 		public void onStart() {
-			// Subscribe as a dipatcher participant to the ChatManager agent
+			// Subscribe as a dispatcher participant to the ChatManager agent
 			ACLMessage subscription = new ACLMessage(ACLMessage.SUBSCRIBE);
 			subscription.setLanguage(codec.getName());
 			subscription.setOntology(onto.getName());
@@ -121,7 +121,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		public void action() {
 			// Receives information about people joining and leaving
-			// the dipatcher from the ChatManager agent
+			// the dispatcher from the ChatManager agent
 			ACLMessage msg = myAgent.receive(template);
 			if (msg != null) {
 				if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -155,16 +155,16 @@ public class ClientAgent extends Agent implements ClientInterface {
 	} // END of inner class ParticipantsManager
 
 	/**
-	 * Inner class ChatListener. This behaviour registers as a dipatcher participant
+	 * Inner class RequestListener. This behaviour registers as a dispatcher participant
 	 * and keeps the list of participants up to date by managing the information
 	 * received from the ChatManager agent.
 	 */
-	class ChatListener extends CyclicBehaviour {
+	class RequestListener extends CyclicBehaviour {
 		private static final long serialVersionUID = 741233963737842521L;
 		private MessageTemplate template = MessageTemplate
 				.MatchConversationId(CHAT_ID);
 
-		ChatListener(Agent a) {
+		RequestListener(Agent a) {
 			super(a);
 		}
 
@@ -181,7 +181,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 				block();
 			}
 		}
-	} // END of inner class ChatListener
+	} // END of inner class RequestListener
 
 	/**
 	 * Inner class ChatSpeaker. INFORMs other participants about a spoken
