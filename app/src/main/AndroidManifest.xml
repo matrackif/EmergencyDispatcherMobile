@@ -6,19 +6,26 @@
 	<uses-permission android:name="android.permission.INTERNET" />
 
 	<application android:icon="@drawable/icon" android:label="@string/app_name"
-		android:name="EmergencyDispatcherMobile">
+		android:name="EmergencyDispatcherMobile" >
 
 		<service android:name="jade.android.MicroRuntimeService" />
-
-		<activity android:name=".MainActivity" android:label="@string/app_title_main">
+		<activity
+			android:name=".MainActivity"
+			android:label="@string/app_name"
+			android:theme="@style/AppTheme"
+			android:screenOrientation="portrait">
+		</activity>
+		<activity android:name=".SettingsActivity" android:screenOrientation="portrait" android:theme="@style/AppTheme" android:label="@string/app_title_settings"/>
+		<activity android:name=".DispatchActivity" android:screenOrientation="portrait" android:theme="@style/AppTheme" android:label="@string/app_title_chat"/>
+		<activity android:name=".ParticipantsActivity" android:screenOrientation="portrait" android:theme="@style/AppTheme" android:label="@string/app_title_participants"/>
+		<activity android:name=".SplashActivity"
+			android:theme="@style/SplashTheme">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
 		
-		<activity android:name=".SettingsActivity" android:label="@string/app_title_settings"></activity>
-		<activity android:name=".DispatchActivity" android:label="@string/app_title_chat"></activity>
-		<activity android:name=".ParticipantsActivity" android:label="@string/app_title_participants"></activity>
+
 	</application>
 </manifest>

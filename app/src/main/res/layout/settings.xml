@@ -2,8 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
 	android:background="@android:color/background_light"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	app:theme="@style/AppTheme">
 
 	<TextView
 		android:id="@+id/hostTextView"
@@ -11,13 +13,13 @@
 		android:layout_height="wrap_content"
 		android:text="@string/label_host"
 		android:textAppearance="@android:style/TextAppearance.Material.Large"
-		android:textColor="@android:color/black"></TextView>
+		android:textColor="@color/colorAccent"/>
 
 	<EditText
 		android:id="@+id/edit_host"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="@android:color/black"></EditText>
+		android:textColor="@android:color/white"/>
 
 	<TextView
 		android:id="@+id/portTextView"
@@ -25,19 +27,19 @@
 		android:layout_height="wrap_content"
 		android:text="@string/label_port"
 		android:textAppearance="@android:style/TextAppearance.Material.Large"
-		android:textColor="@android:color/black"></TextView>
+		android:textColor="@color/colorAccent"/>
 
 	<EditText
 		android:id="@+id/edit_port"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:inputType="number"
-		android:textColor="@android:color/black"></EditText>
+		android:textColor="@android:color/white"/>
 
 	<Button
 		android:id="@+id/button_use"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center_horizontal"
-		android:text="@string/button_use"></Button>
+		android:text="@string/button_use"/>
 </LinearLayout>

@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -93,7 +92,7 @@ public class MainActivity extends Activity {
 		postSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				((TextView) parent.getChildAt(0)).setTextColor(Color.BLACK);
+				//((TextView) parent.getChildAt(0)).setTextColor(Color.BLACK);
 				((TextView) parent.getChildAt(0)).setTextSize(20);
 
 			}

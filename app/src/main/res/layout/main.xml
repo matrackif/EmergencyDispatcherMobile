@@ -4,33 +4,33 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:background="@android:color/background_light"
 	android:orientation="vertical"
-	android:weightSum="1">
+	android:weightSum="1"
+	android:background="@color/colorPrimary"
+	app:theme="@style/AppTheme"
+	>
 
 
 	<ImageView
 		android:id="@+id/imageView"
 		android:layout_width="match_parent"
 		android:layout_height="178dp"
-		app:srcCompat="@mipmap/ic_launcher" />
+		app:srcCompat="@drawable/icon" />
 
 	<TextView
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:layout_marginTop="20dp"
 		android:text="@string/label_nick"
-		android:textColor="@android:color/black"
+		android:textColor="@color/colorAccent"
 		android:textSize="20sp" />
 
 	<EditText
 		android:id="@+id/edit_nickname"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="@android:color/black">
+		android:textColor="@android:color/white" />
 
-		<requestFocus></requestFocus>
-	</EditText>
 
 	<TextView
 		android:id="@+id/textView"
@@ -38,7 +38,7 @@
 		android:layout_height="wrap_content"
 		android:layout_marginTop="20dp"
 		android:text="@string/label_post"
-		android:textColor="@android:color/black"
+		android:textColor="@color/colorAccent"
 		android:textSize="20sp" />
 
 	<Spinner
@@ -48,6 +48,7 @@
 		android:layout_weight="0.12"
 		android:scrollIndicators="right"
 		android:spinnerMode="dropdown"
+		android:theme="@style/AppTheme"
 		android:visibility="visible" />
 
     <Button
@@ -56,6 +57,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="50dp"
+		android:background="@color/colorPrimaryDark"
         android:text="@string/button_login" />
 
 	<TextView

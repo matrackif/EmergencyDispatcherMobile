@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@android:color/white"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimary"
     android:padding="10dp"
-    android:textColor="@android:color/black"
-    android:textColorLink="@android:color/black"
-    android:textSize="16sp"></TextView>
+    android:textColor="@android:color/white"
+    android:textColorLink="@android:color/white"
+    app:theme="@style/AppTheme"
+    android:textSize="16sp"/>
