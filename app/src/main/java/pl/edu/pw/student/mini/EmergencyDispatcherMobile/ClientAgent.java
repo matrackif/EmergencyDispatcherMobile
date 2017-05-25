@@ -34,7 +34,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private static final String CHAT_ID = "__chat__";
 	private static final String CHAT_MANAGER_NAME = "manager";
-	private String type = "User";
+	private String type = MainActivity.getType();//static field from the main activity
 
 	private Set participants = new SortedSetImpl();
 	private java.util.HashMap<AID,String> participantAgents = new java.util.HashMap<>();
@@ -51,7 +51,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 				context = (Context) args[0];
 			}
 		}
-		
+
 		// Register language and ontology
 		ContentManager cm = getContentManager();
 		cm.registerLanguage(codec);
@@ -68,7 +68,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		// Activate the GUI
 		registerO2AInterface(ClientInterface.class, this);
-		
+		setType(type);
 		Intent broadcast = new Intent();
 		broadcast.setAction("jade.demo.user_dispatcher.SHOW_DISPATCHER");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
@@ -245,7 +245,18 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		}
 	}
-		// ///////////////////////////////////////
+
+	@Override
+	public void setType(String s) {
+		type = s;
+	}
+
+	@Override
+	public String getType() {
+		return type;
+	}
+
+	// ///////////////////////////////////////
 	// Methods called by the interface
 	// ///////////////////////////////////////
 	public void handleSpoken(String s) {

@@ -58,10 +58,14 @@ public class MainActivity extends Activity {
 	private TextView infoTextView;
 
 	private String nickname;
-	private String type = "User";
+	private static String type;
 
 
 	Spinner postSpinner;
+	public static String getType()
+	{
+		return type;
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -98,7 +102,7 @@ public class MainActivity extends Activity {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				((TextView) parent.getChildAt(0)).setTextSize(20);
-				type = (String) ((TextView) parent.getChildAt(0)).getText();
+				//type = (String) ((TextView) parent.getChildAt(0)).getText();
 			}
 
 			@Override
@@ -143,8 +147,8 @@ public class MainActivity extends Activity {
 					String port = settings.getString("defaultPort", "");
 					infoTextView.setText(getString(R.string.msg_connecting_to)
 							+ " " + host + ":" + port + "...");
-
-					startChat(nickname, host, port, agentStartupCallback);
+					type = postSpinner.getSelectedItem().toString();
+					startDispatcher(nickname, host, port, agentStartupCallback);
 
 				} catch (Exception ex) {
 					logger.log(Level.SEVERE, "Unexpected exception creating user_dispatcher agent!");
@@ -242,6 +246,7 @@ public class MainActivity extends Activity {
 					Intent showUserDispatcher = new Intent(MainActivity.this,
 							UserDispatcherActivity.class);
 					showUserDispatcher.putExtra("nickname", nickname);
+					showUserDispatcher.putExtra("type", type);
 					MainActivity.this
 							.startActivityForResult(showUserDispatcher, DISPATCH_REQUEST);
 				}
@@ -250,6 +255,7 @@ public class MainActivity extends Activity {
 					Intent showPoliceDispatcher = new Intent(MainActivity.this,
 							PoliceDispatcherActivity.class);
 					showPoliceDispatcher.putExtra("nickname", nickname);
+					showPoliceDispatcher.putExtra("type",type);
 					MainActivity.this
 							.startActivityForResult(showPoliceDispatcher, DISPATCH_REQUEST);
 				}
@@ -278,9 +284,9 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public void startChat(final String nickname, final String host,
-			final String port,
-			final RuntimeCallback<AgentController> agentStartupCallback) {
+	public void startDispatcher(final String nickname, final String host,
+								final String port,
+								final RuntimeCallback<AgentController> agentStartupCallback) {
 
 		final Properties profile = new Properties();
 		profile.setProperty(Profile.MAIN_HOST, host);
@@ -351,6 +357,7 @@ public class MainActivity extends Activity {
 				new RuntimeCallback<Void>() {
 					@Override
 					public void onSuccess(Void thisIsNull) {
+
 						logger.log(Level.INFO, "Successfully start of the "
 								+ ClientAgent.class.getName() + "...");
 						try {

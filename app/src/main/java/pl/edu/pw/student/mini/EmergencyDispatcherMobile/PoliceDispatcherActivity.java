@@ -33,6 +33,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     private MyReceiver myReceiver;
 
     private String nickname;
+    private String type;
     private ClientInterface clientInterface;
     private GoogleMap mMap;
 
@@ -43,11 +44,13 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             nickname = extras.getString("nickname");
+            type = extras.getString("type");
         }
 
         try {
             clientInterface = MicroRuntime.getAgent(nickname)
                     .getO2AInterface(ClientInterface.class);
+            clientInterface.setType(type);
         } catch (StaleProxyException e) {
             showAlertDialog(getString(R.string.msg_interface_exc), true);
         } catch (ControllerException e) {
