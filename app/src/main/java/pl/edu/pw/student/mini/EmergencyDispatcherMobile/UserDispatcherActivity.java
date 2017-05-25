@@ -24,7 +24,7 @@ import jade.wrapper.O2AException;
 import jade.wrapper.StaleProxyException;
 
 
-public class DispatchActivity extends Activity {
+public class UserDispatcherActivity extends Activity {
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
 
 	static final int PARTICIPANTS_REQUEST = 0;
@@ -54,11 +54,9 @@ public class DispatchActivity extends Activity {
 
 		myReceiver = new MyReceiver();
 
-		setContentView(R.layout.dispatcher);
+		setContentView(R.layout.user_dispatcher);
 
 		Button buttonPolice = (Button) findViewById(R.id.button_police);
-		Button buttonFire = (Button) findViewById(R.id.button_fire);
-		buttonFire.setOnClickListener(FireSendListener);
 		buttonPolice.setOnClickListener(PoliceSendListener);
 	}
 	@Override
@@ -69,21 +67,6 @@ public class DispatchActivity extends Activity {
 
 		logger.log(Level.INFO, "Destroy activity!");
 	}
-	private OnClickListener FireSendListener = new OnClickListener() {
-		public void onClick(View v) {
-
-			String message = "HELP!!!";
-			if (message != null && !message.equals("")) {
-				try {
-					clientInterface.handleSpoken(message);
-
-				} catch (O2AException e) {
-					showAlertDialog(e.getMessage(), false);
-				}
-			}
-
-		}
-	};
 
 	private OnClickListener PoliceSendListener = new OnClickListener() {
 		public void onClick(View v) {
@@ -110,7 +93,7 @@ public class DispatchActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_participants:
-			Intent showParticipants = new Intent(DispatchActivity.this,
+			Intent showParticipants = new Intent(UserDispatcherActivity.this,
 					ParticipantsActivity.class);
 			showParticipants.putExtra("nickname", nickname);
 			startActivityForResult(showParticipants, PARTICIPANTS_REQUEST);
@@ -138,7 +121,7 @@ public class DispatchActivity extends Activity {
 	}
 	private void showAlertDialog(String message, final boolean fatal) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(
-				DispatchActivity.this);
+				UserDispatcherActivity.this);
 		builder.setMessage(message)
 				.setCancelable(false)
 				.setPositiveButton("Ok",

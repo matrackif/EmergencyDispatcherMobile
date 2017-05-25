@@ -29,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.util.Objects;
 import java.util.logging.Level;
 
 import jade.android.AndroidHelper;
@@ -48,7 +49,7 @@ public class MainActivity extends Activity {
 	private MicroRuntimeServiceBinder microRuntimeServiceBinder;
 	private ServiceConnection serviceConnection;
 
-	static final int CHAT_REQUEST = 0;
+	static final int DISPATCH_REQUEST = 0;
 	static final int SETTINGS_REQUEST = 1;
 
 	private MyReceiver myReceiver;
@@ -57,6 +58,10 @@ public class MainActivity extends Activity {
 	private TextView infoTextView;
 
 	private String nickname;
+	private String type = "User";
+
+
+	Spinner postSpinner;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,12 +70,12 @@ public class MainActivity extends Activity {
 		myReceiver = new MyReceiver();
 
 		IntentFilter killFilter = new IntentFilter();
-		killFilter.addAction("jade.demo.dispatcher.KILL");
+		killFilter.addAction("jade.demo.user_dispatcher.KILL");
 		registerReceiver(myReceiver, killFilter);
 
-		IntentFilter showChatFilter = new IntentFilter();
-		showChatFilter.addAction("jade.demo.dispatcher.SHOW_CHAT");
-		registerReceiver(myReceiver, showChatFilter);
+		IntentFilter showDispatcherFilter = new IntentFilter();
+		showDispatcherFilter.addAction("jade.demo.user_dispatcher.SHOW_DISPATCHER");
+		registerReceiver(myReceiver, showDispatcherFilter);
 
 		myHandler = new MyHandler();
 
@@ -79,7 +84,7 @@ public class MainActivity extends Activity {
 		Button button = (Button) findViewById(R.id.button_chat);
 		button.setOnClickListener(buttonChatListener);
 
-		final Spinner postSpinner = (Spinner)findViewById(R.id.edit_post);
+		postSpinner = (Spinner)findViewById(R.id.edit_post);
 
 		ImageView loginLogo = (ImageView) findViewById(R.id.imageView);
 		loginLogo.setImageResource(R.mipmap.ic_launcher);
@@ -92,9 +97,8 @@ public class MainActivity extends Activity {
 		postSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				//((TextView) parent.getChildAt(0)).setTextColor(Color.BLACK);
 				((TextView) parent.getChildAt(0)).setTextSize(20);
-
+				type = (String) ((TextView) parent.getChildAt(0)).getText();
 			}
 
 			@Override
@@ -139,9 +143,11 @@ public class MainActivity extends Activity {
 					String port = settings.getString("defaultPort", "");
 					infoTextView.setText(getString(R.string.msg_connecting_to)
 							+ " " + host + ":" + port + "...");
+
 					startChat(nickname, host, port, agentStartupCallback);
+
 				} catch (Exception ex) {
-					logger.log(Level.SEVERE, "Unexpected exception creating dispatcher agent!");
+					logger.log(Level.SEVERE, "Unexpected exception creating user_dispatcher agent!");
 					infoTextView.setText(getString(R.string.msg_unexpected));
 				}
 			}
@@ -173,9 +179,9 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == CHAT_REQUEST) {
+		if (requestCode == DISPATCH_REQUEST) {
 			if (resultCode == RESULT_CANCELED) {
-				// The dispatcher activity was closed.
+				// The user_dispatcher activity was closed.
 				infoTextView.setText("");
 				logger.log(Level.INFO, "Stopping Jade...");
 				microRuntimeServiceBinder
@@ -226,15 +232,28 @@ public class MainActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
-			if (action.equalsIgnoreCase("jade.demo.dispatcher.KILL")) {
+			if (action.equalsIgnoreCase("jade.demo.user_dispatcher.KILL")) {
 				finish();
 			}
-			if (action.equalsIgnoreCase("jade.demo.dispatcher.SHOW_CHAT")) {
-				Intent showChat = new Intent(MainActivity.this,
-						DispatchActivity.class);
-				showChat.putExtra("nickname", nickname);
-				MainActivity.this
-						.startActivityForResult(showChat, CHAT_REQUEST);
+			if (action.equalsIgnoreCase("jade.demo.user_dispatcher.SHOW_DISPATCHER")) {
+
+				if(Objects.equals(type, "User"))
+				{
+					Intent showUserDispatcher = new Intent(MainActivity.this,
+							UserDispatcherActivity.class);
+					showUserDispatcher.putExtra("nickname", nickname);
+					MainActivity.this
+							.startActivityForResult(showUserDispatcher, DISPATCH_REQUEST);
+				}
+				if(Objects.equals(type, "Police"))
+				{
+					Intent showPoliceDispatcher = new Intent(MainActivity.this,
+							PoliceDispatcherActivity.class);
+					showPoliceDispatcher.putExtra("nickname", nickname);
+					MainActivity.this
+							.startActivityForResult(showPoliceDispatcher, DISPATCH_REQUEST);
+				}
+
 			}
 		}
 	}

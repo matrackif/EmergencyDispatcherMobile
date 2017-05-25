@@ -34,7 +34,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private static final String CHAT_ID = "__chat__";
 	private static final String CHAT_MANAGER_NAME = "manager";
-	private String type = "USER_AGENT";
+	private String type = "User";
 
 	private Set participants = new SortedSetImpl();
 	private java.util.HashMap<AID,String> participantAgents = new java.util.HashMap<>();
@@ -70,7 +70,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		registerO2AInterface(ClientInterface.class, this);
 		
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dispatcher.SHOW_CHAT");
+		broadcast.setAction("jade.demo.user_dispatcher.SHOW_DISPATCHER");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
@@ -81,21 +81,21 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private void notifyParticipantsChanged() {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dispatcher.REFRESH_PARTICIPANTS");
+		broadcast.setAction("jade.demo.user_dispatcher.REFRESH_PARTICIPANTS");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
 
 	private void notifySpoken(String speaker, String sentence) {
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.dispatcher.REFRESH_CHAT");
+		broadcast.setAction("jade.demo.user_dispatcher.REFRESH_CHAT");
 		broadcast.putExtra("sentence", speaker + ": " + sentence + "\n");
 		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
 		context.sendBroadcast(broadcast);
 	}
-	
+
 	/**
-	 * Inner class ParticipantsManager. This behaviour registers as a dispatcher
+	 * Inner class ParticipantsManager. This behaviour registers as a user_dispatcher
 	 * participant and keeps the list of participants up to date by managing the
 	 * information received from the ChatManager agent.
 	 */
@@ -108,7 +108,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		}
 
 		public void onStart() {
-			// Subscribe as a dispatcher participant to the ChatManager agent
+			// Subscribe as a user_dispatcher participant to the ChatManager agent
 			ACLMessage subscription = new ACLMessage(ACLMessage.SUBSCRIBE);
 			subscription.setLanguage(codec.getName());
 			subscription.setOntology(onto.getName());
@@ -125,7 +125,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		public void action() {
 			// Receives information about people joining and leaving
-			// the dispatcher from the ChatManager agent
+			// the user_dispatcher from the ChatManager agent
 			ACLMessage msg = myAgent.receive(template);
 			if (msg != null) {
 				if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -172,7 +172,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 	} // END of inner class ParticipantsManager
 
 	/**
-	 * Inner class RequestListener. This behaviour registers as a dispatcher participant
+	 * Inner class RequestListener. This behaviour registers as a user_dispatcher participant
 	 * and keeps the list of participants up to date by managing the information
 	 * received from the ChatManager agent.
 	 */
@@ -225,8 +225,27 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 		}
 	} // END of inner class ChatSpeaker
+	private class ChatSpecificSpeaker extends OneShotBehaviour {
+		private static final long serialVersionUID = -142323904935339194L;
+		private String sentence;
+		private AID recv;
 
-	// ///////////////////////////////////////
+		private ChatSpecificSpeaker(Agent a, String s, AID aid) {
+			super(a);
+			sentence = s;
+			recv = aid;
+		}
+
+		public void action() {
+			spokenMsg.clearAllReceiver();
+			spokenMsg.addReceiver(recv);
+			spokenMsg.setContent(sentence);
+			notifySpoken(myAgent.getLocalName(), sentence);
+			send(spokenMsg);
+
+		}
+	}
+		// ///////////////////////////////////////
 	// Methods called by the interface
 	// ///////////////////////////////////////
 	public void handleSpoken(String s) {
@@ -234,7 +253,12 @@ public class ClientAgent extends Agent implements ClientInterface {
 		// the spoken sentence
 		addBehaviour(new ChatSpeaker(this, s));
 	}
-	
+
+
+	public void handleSpoken(String s, AID a) {
+		addBehaviour(new ChatSpecificSpeaker(this,s,a));
+	}
+
 	public String[] getParticipantNames() {
 
 		String[] pp = new String[participantAgents.size()];
@@ -242,8 +266,8 @@ public class ClientAgent extends Agent implements ClientInterface {
 		int i =0;
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry)it.next();
-			AID current = (AID) pair.getKey();
-			pp[i++] = current.getLocalName() + "("+pair.getValue()+")";
+			AID currentAID = (AID) pair.getKey();
+			pp[i++] = currentAID.getLocalName()+"_"+pair.getValue()+"_"+currentAID;
 			logger.log(Logger.INFO, "Content is: " + pair.getKey() + "("+pair.getValue()+")");
 		}
 		return pp;

@@ -3,7 +3,8 @@
     <string name="app_name">Emergency Dispatcher Mobile</string>
     <string name="app_title_main">Emergency Dispatcher Mobile</string>
     <string name="app_title_settings">Settings</string>
-    <string name="app_title_chat">Dispatcher</string>
+    <string name="app_title_user_dispatcher">User Dispatcher</string>
+    <string name="app_title_police_dispatcher">Police Dispatcher</string>
     <string name="app_title_participants">Agents</string>
 
     <string name="label_nick">Enter Username</string>
@@ -13,7 +14,6 @@
     
     <string name="button_login">Login</string>
     <string name="button_police">Send Police!</string>
-    <string name="button_fire">Send Fireman!</string>
 
     <string name="button_use">Save</string>
 
@@ -32,7 +32,6 @@
 
     <string-array name="posts_array">
         <item>User</item>
-        <item>Fire Agent</item>
-        <item>Police Agent</item>
+        <item>Police</item>
     </string-array>
 </resources>
