@@ -1,19 +1,28 @@
 
 package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.logging.Level;
 
@@ -34,6 +43,8 @@ public class UserDispatcherActivity extends Activity {
 	private String nickname;
 	private String type;
 	private ClientInterface clientInterface;
+	LocationManager locationManager;
+	LocationListener locationListener;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +72,35 @@ public class UserDispatcherActivity extends Activity {
 
 		Button buttonPolice = (Button) findViewById(R.id.button_police);
 		buttonPolice.setOnClickListener(PoliceSendListener);
+
+		locationManager = (LocationManager)
+				getSystemService(Context.LOCATION_SERVICE);
+		locationListener = new LocationListener() {
+			@Override
+			public void onLocationChanged(Location location) {
+
+			}
+
+			@Override
+			public void onStatusChanged(String provider, int status, Bundle extras) {
+
+			}
+
+			@Override
+			public void onProviderEnabled(String provider) {
+				Toast.makeText(getApplicationContext(), "Gps is turned on!! ",
+						Toast.LENGTH_SHORT).show();
+			}
+
+			@Override
+			public void onProviderDisabled(String provider) {
+				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(intent);
+				Toast.makeText(getApplicationContext(), "Gps is turned off!! ",
+						Toast.LENGTH_SHORT).show();
+
+			}
+		};
 	}
 	@Override
 	protected void onDestroy() {
@@ -74,15 +114,25 @@ public class UserDispatcherActivity extends Activity {
 	private OnClickListener PoliceSendListener = new OnClickListener() {
 		public void onClick(View v) {
 
-			String message = "HELP!!!";
-			if (message != null && !message.equals("")) {
 				try {
-					clientInterface.handleSpoken(message);
+
+					if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+						//handle if location is not on
+						Log.e("GPS_ERROR", "Could not get GPS permission");
+						return;
+					}
+					Location location =  locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+					String latLongString = null;
+					if(location!=null)
+					{
+						latLongString = location.getLatitude() + "_" + location.getLongitude();
+						clientInterface.handleSpoken(latLongString);
+					}
 
 				} catch (O2AException e) {
 					showAlertDialog(e.getMessage(), false);
 				}
-			}
+
 
 		}
 	};

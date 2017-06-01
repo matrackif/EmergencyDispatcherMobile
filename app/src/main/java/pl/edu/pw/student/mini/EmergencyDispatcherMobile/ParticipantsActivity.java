@@ -1,18 +1,26 @@
-
 package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
+import android.Manifest;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.StringReader;
 import java.util.logging.Level;
@@ -32,6 +40,9 @@ public class ParticipantsActivity extends ListActivity {
 
 	private String nickname;
 	private ClientInterface clientInterface;
+	LocationManager locationManager;
+	LocationListener locationListener;
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -68,17 +79,48 @@ public class ParticipantsActivity extends ListActivity {
 		ListView listView = getListView();
 		listView.setTextFilterEnabled(true);
 		listView.setOnItemClickListener(listViewtListener);
+
+		locationManager = (LocationManager)
+				getSystemService(Context.LOCATION_SERVICE);
+		locationListener = new LocationListener() {
+			@Override
+			public void onLocationChanged(Location location) {
+
+			}
+
+			@Override
+			public void onStatusChanged(String provider, int status, Bundle extras) {
+
+			}
+
+			@Override
+			public void onProviderEnabled(String provider) {
+				Toast.makeText(getApplicationContext(), "Gps is turned on!! ",
+						Toast.LENGTH_SHORT).show();
+			}
+
+			@Override
+			public void onProviderDisabled(String provider) {
+				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(intent);
+				Toast.makeText(getApplicationContext(), "Gps is turned off!! ",
+						Toast.LENGTH_SHORT).show();
+
+			}
+		};
+
+
 	}
 
 	private OnItemClickListener listViewtListener = new OnItemClickListener() {
 		public void onItemClick(AdapterView<?> parent, View view, int position,
-				long id) {
-			TextView procTextView =(TextView) parent.getChildAt(position);
+								long id) {
+			TextView procTextView = (TextView) parent.getChildAt(position);
 			String[] procItem = procTextView.getText().toString().split("_");
-			logger.log(Logger.INFO,procItem[0]);
+			logger.log(Logger.INFO, procItem[0]);
 			String procName = procItem[0];
 
-			logger.log(Logger.WARNING,"Name is :"+procName);
+			logger.log(Logger.WARNING, "Name is :" + procName);
 			AID aid_rec = new AID();
 
 			String aux = procItem[2];
@@ -86,12 +128,24 @@ public class ParticipantsActivity extends ListActivity {
 			StringACLCodec codec = new StringACLCodec(new StringReader(aux), null);
 			try {
 				aid_rec = codec.decodeAID();
-				logger.log(Logger.WARNING,"Scam AID:"+aid_rec);
+				logger.log(Logger.WARNING, "Scam AID:" + aid_rec);
 			} catch (ACLCodec.CodecException e) {
 				e.printStackTrace();
 			}
 
-			clientInterface.handleSpoken("HELP! Specific ",aid_rec);
+
+			if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+				//handle if location is not on
+				Log.e("GPS_ERROR", "Could not get GPS permission");
+				return;
+			}
+			Location location =  locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+			String latLongString = null;
+			if(location!=null)
+			{
+				latLongString = location.getLatitude() + "_" + location.getLongitude();
+				clientInterface.handleSpoken(latLongString,aid_rec);
+			}
 
 			//finish();
 		}
