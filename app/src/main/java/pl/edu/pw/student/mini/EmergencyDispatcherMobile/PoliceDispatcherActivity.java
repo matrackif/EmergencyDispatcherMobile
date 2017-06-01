@@ -7,15 +7,20 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -44,16 +49,25 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     private String type;
     private ClientInterface clientInterface;
     private GoogleMap mMap;
+    LocationManager locationManager;
+    LocationListener locationListener;
     private ArrayList<MarkerOptions> markerOptionsList = new ArrayList<>();
     private Handler timerHandler = new Handler();
     private Runnable agentLocationUpdaterRunnable = new Runnable() {
         @Override
         public void run() {
+            MarkerOptions currentMarkerOptions = null;
+            LatLng latLng = null;
+            String agentName = null;
+            String oldAgentName = null;
             markerOptionsList.clear();
-            java.util.HashMap<String,LatLng> agentLocations = MainActivity.getKnownAgentLocations();
-            for(Map.Entry<String,LatLng> entry : agentLocations.entrySet()){
-                LatLng latLng = entry.getValue();
-                String agentName = entry.getKey();
+            mMap.clear();
+            //clearing the old markers but flickering can be seen cause this method runs every second which is not good
+            java.util.HashMap<String, LatLng> agentLocations = MainActivity.getKnownAgentLocations();
+            for (Map.Entry<String, LatLng> entry : agentLocations.entrySet()) {
+                latLng = entry.getValue();
+                agentName = entry.getKey();
+
                 //Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + "and at lat/long: " + latLng.latitude + "," + latLng.longitude);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(latLng);
@@ -61,10 +75,49 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 markerOptionsList.add(markerOptions);
             }
-            for(MarkerOptions markerOptions : markerOptionsList){
-                Marker m = mMap.addMarker(markerOptions);
+            for (MarkerOptions markerOptions : markerOptionsList) {
+
+                currentMarkerOptions = markerOptions;
+                Marker m = mMap.addMarker(currentMarkerOptions);
                 m.setDraggable(true);
+                //TODO: We need to make it run only once or when we receive a job so we can accept the job properly.
+
             }
+
+//            if(!(latLng == null || agentName == null || currentMarkerOptions==null))
+//            {
+//            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//
+//                return;
+//            }
+//            Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+//            Location agentLocation = new Location(locationManager.NETWORK_PROVIDER);
+//            agentLocation.setLatitude(latLng.latitude);
+//            agentLocation.setLongitude(latLng.longitude);
+//            double jobDistance = location.distanceTo(agentLocation)/1000;
+//                AlertDialog.Builder alert = new AlertDialog.Builder(getApplicationContext());
+//                alert.setMessage("Agent name:" + agentName + " needs some help "+jobDistance +"Km away" );
+//                alert.setTitle("New Job Alert!");
+//                final MarkerOptions finalCurrentMarkerOptions = currentMarkerOptions;
+//
+//                alert.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int whichButton) {
+//                        Marker m = mMap.addMarker(finalCurrentMarkerOptions);
+//                        m.setDraggable(true);
+//                        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+//                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14.0f));
+//                    }
+//                });
+//
+//                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int whichButton) {
+//
+//                    }
+//                });
+//                alert.show();
+
+//            }
+
             timerHandler.postDelayed(this, 1000); //Update locations every second
         }
     };
@@ -94,6 +147,34 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        locationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+                Toast.makeText(getApplicationContext(), "Gps is turned on!! ",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+                Toast.makeText(getApplicationContext(), "Gps is turned off!! ",
+                        Toast.LENGTH_SHORT).show();
+
+            }
+        };
         timerHandler.post(agentLocationUpdaterRunnable);
 
     }
@@ -105,10 +186,12 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(myReceiver!=null){
+            unregisterReceiver(myReceiver);
+            logger.log(Level.INFO, "Destroy activity!");
+        }
 
-        unregisterReceiver(myReceiver);
 
-        logger.log(Level.INFO, "Destroy activity!");
     }
 
     @Override
@@ -150,6 +233,11 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
             return;
         }
         mMap.setMyLocationEnabled(true);
+        Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+        if(location!=null)
+        {
+            mapInit(location);
+        }
     }
 
 
@@ -178,6 +266,15 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                         });
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    private void mapInit(Location location) {
+        double latitude = location.getLatitude();
+        double longitude=location.getLongitude();
+        LatLng loc = new LatLng(latitude, longitude);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 14.0f));
+
     }
 
 
