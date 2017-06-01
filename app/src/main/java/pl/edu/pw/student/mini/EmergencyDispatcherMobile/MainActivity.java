@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,6 +30,9 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -39,6 +43,7 @@ import jade.android.RuntimeCallback;
 import jade.core.MicroRuntime;
 import jade.core.Profile;
 import jade.util.Logger;
+import jade.util.leap.HashMap;
 import jade.util.leap.Properties;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
@@ -48,18 +53,19 @@ public class MainActivity extends Activity {
 
 	private MicroRuntimeServiceBinder microRuntimeServiceBinder;
 	private ServiceConnection serviceConnection;
-
+	private static java.util.HashMap<String, LatLng> knownLocationsOfAgents = new java.util.HashMap<>(); // AID.LocalName -> LatLng
 	static final int DISPATCH_REQUEST = 0;
 	static final int SETTINGS_REQUEST = 1;
 
 	private MyReceiver myReceiver;
 	private MyHandler myHandler;
-
+	public static final String USER = "User";
+	public static final String POLICE = "Police";
 	private TextView infoTextView;
 
 	private String nickname;
 	private static String type;
-
+	public static final String ACTION_SEND_LAT_LONG = "jade.demo.user_dispatcher.SEND_LAT_LNG";
 
 	Spinner postSpinner;
 	public static String getType()
@@ -72,7 +78,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		myReceiver = new MyReceiver();
-
+		//REGISTERING OUR RECEIVER WITH OUT ACTION
 		IntentFilter killFilter = new IntentFilter();
 		killFilter.addAction("jade.demo.user_dispatcher.KILL");
 		registerReceiver(myReceiver, killFilter);
@@ -80,6 +86,10 @@ public class MainActivity extends Activity {
 		IntentFilter showDispatcherFilter = new IntentFilter();
 		showDispatcherFilter.addAction("jade.demo.user_dispatcher.SHOW_DISPATCHER");
 		registerReceiver(myReceiver, showDispatcherFilter);
+
+		IntentFilter sendLatLongFilter = new IntentFilter();
+		sendLatLongFilter.addAction(ACTION_SEND_LAT_LONG);
+		registerReceiver(myReceiver, sendLatLongFilter);
 
 		myHandler = new MyHandler();
 
@@ -131,7 +141,9 @@ public class MainActivity extends Activity {
 		}
 		return true;
 	}
-
+	public static java.util.HashMap<String,LatLng> getKnownAgentLocations(){
+		return knownLocationsOfAgents;
+	}
 	private OnClickListener buttonChatListener = new OnClickListener() {
 		public void onClick(View v) {
 			final EditText nameField = (EditText) findViewById(R.id.edit_nickname);
@@ -234,14 +246,20 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			//We got here because some class called the "context.SendBroadcast()" method
+			//This is how the other classes can communicate with the MainActivity
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			///IMPORTANT: EVERY TIME WE ADD A NEW ACTION WE HAVE TO REGISTER IT WITH THE BROADCAST RECEIVER IN MainActivity.java (onCreate())///
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
+
 			if (action.equalsIgnoreCase("jade.demo.user_dispatcher.KILL")) {
 				finish();
 			}
-			if (action.equalsIgnoreCase("jade.demo.user_dispatcher.SHOW_DISPATCHER")) {
+			else if (action.equalsIgnoreCase("jade.demo.user_dispatcher.SHOW_DISPATCHER")) {
 
-				if(Objects.equals(type, "User"))
+				if(Objects.equals(type, USER))
 				{
 					Intent showUserDispatcher = new Intent(MainActivity.this,
 							UserDispatcherActivity.class);
@@ -250,7 +268,7 @@ public class MainActivity extends Activity {
 					MainActivity.this
 							.startActivityForResult(showUserDispatcher, DISPATCH_REQUEST);
 				}
-				if(Objects.equals(type, "Police"))
+				if(Objects.equals(type, POLICE))
 				{
 					Intent showPoliceDispatcher = new Intent(MainActivity.this,
 							PoliceDispatcherActivity.class);
@@ -259,6 +277,30 @@ public class MainActivity extends Activity {
 					MainActivity.this
 							.startActivityForResult(showPoliceDispatcher, DISPATCH_REQUEST);
 				}
+
+			}
+			else if (action.equalsIgnoreCase(ACTION_SEND_LAT_LONG)){
+				//Someone sent us their latitude and longitude, decode the message and do the appropriate action
+				//To see the format of this message, see the handleReceivedMessage() method in ClientAgent.java
+				//The format is something like: <SPEAKER>:LATITUDE_LONGITUDE
+				//So we have to split the string twice (lol)
+				try{
+					String sentence = intent.getStringExtra("sentence");
+					String[] speakerAndLatLong = sentence.split(":");
+					String speaker = speakerAndLatLong[0];
+					String lat = speakerAndLatLong[1].split("_")[0];
+					String lng = speakerAndLatLong[1].split("_")[1];
+					Log.i("LatLng", "The speaker: " + speaker + " has sent us lat and long: (" + lat + "," + lng + ")");
+					//TODO store latitude and longitude of agents somewhere for future use
+					double latAsDouble = Double.parseDouble(lat);
+					double lngAsDouble = Double.parseDouble(lng);
+					LatLng latLng = new LatLng(latAsDouble, lngAsDouble);
+					knownLocationsOfAgents.put(speaker,latLng);
+				} catch(Exception e){
+					Log.e("ERROR", "Could not parse the latitude/longitude message correctly: " + e.toString());
+				}
+
+
 
 			}
 		}

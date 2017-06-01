@@ -3,6 +3,7 @@ package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.List;
 import java.util.Map;
@@ -86,11 +87,15 @@ public class ClientAgent extends Agent implements ClientInterface {
 		context.sendBroadcast(broadcast);
 	}
 
-	private void notifySpoken(String speaker, String sentence) {
+	private void handleReceivedMessage(String speaker, String sentence, String action) {
+		/* This broadcasts the received message to all "broadcast receivers" which is basically only ourself
+		 * It allows as to communicate with the main activity. (See the MyReceiver class in MainActivity.java)
+		 * Based on the "action" argument we decide on what we send to the main activity
+		 */
 		Intent broadcast = new Intent();
-		broadcast.setAction("jade.demo.user_dispatcher.REFRESH_CHAT");
+		broadcast.setAction(action);
 		broadcast.putExtra("sentence", speaker + ": " + sentence + "\n");
-		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction());
+		logger.log(Level.INFO, "Sending broadcast " + broadcast.getAction() + " Sentence: " + broadcast.getStringExtra("sentence"));
 		context.sendBroadcast(broadcast);
 	}
 
@@ -188,9 +193,14 @@ public class ClientAgent extends Agent implements ClientInterface {
 		public void action() {
 			ACLMessage msg = myAgent.receive(template);
 			if (msg != null) {
+				//Here we check what message we received, and based on that we call the proper "notify" method
+				Log.i("RequestListener", "Received messaged with content: " + msg.getContent() + " from: " + msg.getSender());
 				if (msg.getPerformative() == ACLMessage.INFORM) {
-					notifySpoken(msg.getSender().getLocalName(),
-							msg.getContent());
+					//The message performative is INFORM, so it means that the agent wants to inform us about their latitude and longitude
+					//TODO maybe find a different way of distinguishing messages because maybe we want to INFORM about other things besides LatLng?
+					//At the moment "spokenMsg" is always an "INFORM" message, and that's what we send in handleSpoken
+					//IMPORTANT: EVERY TIME WE ADD A NEW ACTION WE HAVE TO REGISTER IT WITH THE BROADCAST RECEIVER IN MainActivity.java
+					handleReceivedMessage(msg.getSender().getLocalName(), msg.getContent(), MainActivity.ACTION_SEND_LAT_LONG);
 				} else {
 					handleUnexpected(msg);
 				}
@@ -220,7 +230,8 @@ public class ClientAgent extends Agent implements ClientInterface {
 				spokenMsg.addReceiver((AID) it.next());
 			}
 			spokenMsg.setContent(sentence);
-			notifySpoken(myAgent.getLocalName(), sentence);
+			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
+			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
 
 		}
@@ -240,7 +251,8 @@ public class ClientAgent extends Agent implements ClientInterface {
 			spokenMsg.clearAllReceiver();
 			spokenMsg.addReceiver(recv);
 			spokenMsg.setContent(sentence);
-			notifySpoken(myAgent.getLocalName(), sentence);
+			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
+			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
 
 		}
@@ -270,7 +282,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		addBehaviour(new ChatSpecificSpeaker(this,s,a));
 	}
 
-	public String[] getParticipantNames() {
+		public String[] getParticipantNames() {
 
 		String[] pp = new String[participantAgents.size()];
 		java.util.Iterator it = participantAgents.entrySet().iterator();
