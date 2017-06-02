@@ -12,10 +12,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,10 +32,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -43,7 +46,6 @@ import jade.android.RuntimeCallback;
 import jade.core.MicroRuntime;
 import jade.core.Profile;
 import jade.util.Logger;
-import jade.util.leap.HashMap;
 import jade.util.leap.Properties;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
@@ -146,29 +148,48 @@ public class MainActivity extends Activity {
 	}
 	private OnClickListener buttonChatListener = new OnClickListener() {
 		public void onClick(View v) {
-			final EditText nameField = (EditText) findViewById(R.id.edit_nickname);
-			nickname = nameField.getText().toString();
-			if (!checkName(nickname)) {
-				logger.log(Level.INFO, "Invalid nickname!");
-				myHandler.postError(getString(R.string.msg_nickname_not_valid));
-			} else {
-				try {
-					SharedPreferences settings = getSharedPreferences(
-							"jadeChatPrefsFile", 0);
-					String host = settings.getString("defaultHost", "");
-					String port = settings.getString("defaultPort", "");
-					infoTextView.setText(getString(R.string.msg_connecting_to)
-							+ " " + host + ":" + port + "...");
-					type = postSpinner.getSelectedItem().toString();
-					startDispatcher(nickname, host, port, agentStartupCallback);
+			if(isNetworkAvailable()) {
 
-				} catch (Exception ex) {
-					logger.log(Level.SEVERE, "Unexpected exception creating user_dispatcher agent!");
-					infoTextView.setText(getString(R.string.msg_unexpected));
+				final EditText nameField = (EditText) findViewById(R.id.edit_nickname);
+				nickname = nameField.getText().toString();
+				if (!checkName(nickname)) {
+					logger.log(Level.INFO, "Invalid nickname!");
+					myHandler.postError(getString(R.string.msg_nickname_not_valid));
+				} else {
+					try {
+						SharedPreferences settings = getSharedPreferences(
+								"jadeChatPrefsFile", 0);
+						String host = settings.getString("defaultHost", "");
+						String port = settings.getString("defaultPort", "");
+						infoTextView.setText(getString(R.string.msg_connecting_to)
+								+ " " + host + ":" + port + "...");
+						type = postSpinner.getSelectedItem().toString();
+						startDispatcher(nickname, host, port, agentStartupCallback);
+
+					} catch (Exception ex) {
+						logger.log(Level.SEVERE, "Unexpected exception creating user_dispatcher agent!");
+						infoTextView.setText(getString(R.string.msg_unexpected));
+					}
 				}
 			}
+			else
+			{
+				Intent intent = new Intent(Settings.ACTION_SETTINGS);
+				startActivity(intent);
+				Toast.makeText(getApplicationContext(), "Please open Wifi or MobileData to use our services",
+						Toast.LENGTH_LONG).show();
+
+			}
+
 		}
 	};
+
+	private boolean isNetworkAvailable() {
+		ConnectivityManager connectivityManager
+				= (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

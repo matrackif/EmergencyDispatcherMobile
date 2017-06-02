@@ -22,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -58,11 +59,18 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     private Runnable agentLocationUpdaterRunnable = new Runnable() {
         @Override
         public void run() {
+            MarkerOptions currentMarkerOptions = null;
+            LatLng latLng = null;
+            String agentName = null;
+            String oldAgentName = null;
             markerOptionsList.clear();
+            mMap.clear();
+            //clearing the old markers but flickering can be seen cause this method runs every second which is not good
             java.util.HashMap<String, LatLng> agentLocations = MainActivity.getKnownAgentLocations();
             for (Map.Entry<String, LatLng> entry : agentLocations.entrySet()) {
-                LatLng latLng = entry.getValue();
-                String agentName = entry.getKey();
+                latLng = entry.getValue();
+                agentName = entry.getKey();
+
                 //Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + "and at lat/long: " + latLng.latitude + "," + latLng.longitude);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(latLng);
@@ -71,8 +79,12 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 markerOptionsList.add(markerOptions);
             }
             for (MarkerOptions markerOptions : markerOptionsList) {
-                Marker m = mMap.addMarker(markerOptions);
+
+                currentMarkerOptions = markerOptions;
+                Marker m = mMap.addMarker(currentMarkerOptions);
                 m.setDraggable(true);
+                //TODO: We need to make it run only once or when we receive a job so we can accept the job properly.
+
             }
             timerHandler.postDelayed(this, 1000); //Update locations every second
         }
@@ -126,8 +138,8 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        // Initialize location variables
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -167,10 +179,12 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(myReceiver!=null){
+            unregisterReceiver(myReceiver);
+            logger.log(Level.INFO, "Destroy activity!");
+        }
 
-        unregisterReceiver(myReceiver);
 
-        logger.log(Level.INFO, "Destroy activity!");
     }
 
     @Override
@@ -212,6 +226,11 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
             return;
         }
         mMap.setMyLocationEnabled(true);
+        Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+        if(location!=null)
+        {
+            mapInit(location);
+        }
     }
 
 
@@ -268,12 +287,23 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                             public void onClick(
                                     DialogInterface dialog, int id) {
                                 dialog.cancel();
-                                if (fatal) finish();
+                                if(fatal) finish();
                             }
                         });
         AlertDialog alert = builder.create();
         alert.show();
     }
+
+    private void mapInit(Location location) {
+        double latitude = location.getLatitude();
+        double longitude=location.getLongitude();
+        LatLng loc = new LatLng(latitude, longitude);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 14.0f));
+
+    }
+
+
 
 
 }
