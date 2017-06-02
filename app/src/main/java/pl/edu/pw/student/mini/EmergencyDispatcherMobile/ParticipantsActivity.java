@@ -132,21 +132,10 @@ public class ParticipantsActivity extends ListActivity {
 			} catch (ACLCodec.CodecException e) {
 				e.printStackTrace();
 			}
-
-
-			if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-				//handle if location is not on
-				Log.e("GPS_ERROR", "Could not get GPS permission");
-				return;
+			if(MainActivity.getType().equalsIgnoreCase(MainActivity.USER)){
+				clientInterface.handleSpoken(UserDispatcherActivity.HELP_MSG, aid_rec);
 			}
-			Location location =  locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
-			String latLongString = null;
-			if(location!=null)
-			{
-				latLongString = location.getLatitude() + "_" + location.getLongitude();
-				clientInterface.handleSpoken(latLongString,aid_rec);
-			}
-
+			//TODO if police then maybe send backup?
 			//finish();
 		}
 	};

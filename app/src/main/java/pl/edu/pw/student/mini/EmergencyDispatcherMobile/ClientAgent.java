@@ -201,10 +201,17 @@ public class ClientAgent extends Agent implements ClientInterface {
 					//At the moment "spokenMsg" is always an "INFORM" message, and that's what we send in handleSpoken
 					//IMPORTANT: EVERY TIME WE ADD A NEW ACTION WE HAVE TO REGISTER IT WITH THE BROADCAST RECEIVER IN MainActivity.java
 					handleReceivedMessage(msg.getSender().getLocalName(), msg.getContent(), MainActivity.ACTION_SEND_LAT_LONG);
-				} else {
+				}
+				else if(msg.getPerformative() == ACLMessage.REQUEST){
+					// A user is requesting help
+					handleReceivedMessage(msg.getSender().getLocalName(), msg.getContent(), PoliceDispatcherActivity.ACTION_REQUEST_HELP);
+				}
+				else {
 					handleUnexpected(msg);
 				}
-			} else {
+			}
+
+			else {
 				block();
 			}
 		}
@@ -218,6 +225,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 		private static final long serialVersionUID = -1426033904935339194L;
 		private String sentence;
 		private MessageTemplate template;
+		private int performative;
 		private ChatSpeaker(Agent a, String s) {
 			super(a);
 			sentence = s;
@@ -230,17 +238,22 @@ public class ClientAgent extends Agent implements ClientInterface {
 				spokenMsg.addReceiver((AID) it.next());
 			}
 			spokenMsg.setContent(sentence);
+			if(sentence.equalsIgnoreCase(UserDispatcherActivity.HELP_MSG)){
+				//Help message should be a REQUEST perforamtive (like request help)
+				spokenMsg.setPerformative(ACLMessage.REQUEST);
+			}
 			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
 			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
-
+			spokenMsg.setPerformative(ACLMessage.INFORM);
+			//After sending message set performative back to INFORM so we can send lat/longs again
 		}
 	} // END of inner class ChatSpeaker
 	private class ChatSpecificSpeaker extends OneShotBehaviour {
 		private static final long serialVersionUID = -142323904935339194L;
 		private String sentence;
 		private AID recv;
-
+		private int performative;
 		private ChatSpecificSpeaker(Agent a, String s, AID aid) {
 			super(a);
 			sentence = s;
@@ -251,9 +264,15 @@ public class ClientAgent extends Agent implements ClientInterface {
 			spokenMsg.clearAllReceiver();
 			spokenMsg.addReceiver(recv);
 			spokenMsg.setContent(sentence);
+			if(sentence.equalsIgnoreCase(UserDispatcherActivity.HELP_MSG)){
+				//Help message should be a REQUEST perforamtive (like request help)
+				spokenMsg.setPerformative(ACLMessage.REQUEST);
+			}
 			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
 			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
+			//After sending message set performative back to INFORM so we can send lat/longs again
+			spokenMsg.setPerformative(ACLMessage.INFORM);
 
 		}
 	}

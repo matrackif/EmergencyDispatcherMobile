@@ -13,6 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -43,9 +44,28 @@ public class UserDispatcherActivity extends Activity {
 	private String nickname;
 	private String type;
 	private ClientInterface clientInterface;
-	LocationManager locationManager;
-	LocationListener locationListener;
-
+	private LocationManager locationManager;
+	private LocationListener locationListener;
+	private Handler timerHandler = new Handler();
+	public static final String HELP_MSG = "HELP";
+	private Runnable sendCurrentLocationRunnable = new Runnable() {
+		@Override
+		public void run() {
+			if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+				//handle if location is not on
+				Log.e("GPS_ERROR", "Could not get GPS permission");
+				return;
+			}
+			Location location =  locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+			String latLongString = null;
+			if(location != null) {
+				latLongString = location.getLatitude() + "_" + location.getLongitude();
+				clientInterface.handleSpoken(latLongString);
+			}
+			timerHandler.postDelayed(this, 5000); //broadcast location every  5 sec
+			//TODO send this info to chat manager and let him broadcast it instead (or maybe not?)
+		}
+	};
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -101,41 +121,26 @@ public class UserDispatcherActivity extends Activity {
 
 			}
 		};
+		timerHandler.postDelayed(sendCurrentLocationRunnable, 5000);
 	}
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-
 		unregisterReceiver(myReceiver);
-
 		logger.log(Level.INFO, "Destroy activity!");
 	}
 
 	private OnClickListener PoliceSendListener = new OnClickListener() {
 		public void onClick(View v) {
-
 				try {
-
-					if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-						//handle if location is not on
-						Log.e("GPS_ERROR", "Could not get GPS permission");
-						return;
-					}
-					Location location =  locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
-					String latLongString = null;
-					if(location!=null)
-					{
-						latLongString = location.getLatitude() + "_" + location.getLongitude();
-						clientInterface.handleSpoken(latLongString);
-					}
-
+					Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
+					clientInterface.handleSpoken(HELP_MSG);
 				} catch (O2AException e) {
 					showAlertDialog(e.getMessage(), false);
 				}
-
-
 		}
 	};
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
