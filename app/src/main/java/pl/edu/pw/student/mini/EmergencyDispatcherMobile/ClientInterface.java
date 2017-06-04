@@ -7,8 +7,8 @@ public interface ClientInterface {
 
 	public void setType(String s);
 	public String getType();
-	public void handleSpoken(String s);
-	public void handleSpoken(String s , AID a);
+	public void handleSpoken(String s, int performative);
+	public void handleSpoken(String s , AID a, int performative);
 	public String[] getParticipantNames();
 
 }

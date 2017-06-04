@@ -89,7 +89,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 
 	private void handleReceivedMessage(String speaker, String sentence, String action) {
 		/* This broadcasts the received message to all "broadcast receivers" which is basically only ourself
-		 * It allows as to communicate with the main activity. (See the MyReceiver class in MainActivity.java)
+		 * It allows as to communicate with any activity that's a broadcast receiver (almost everyone).
 		 * Based on the "action" argument we decide on what we send to the main activity
 		 */
 		Intent broadcast = new Intent();
@@ -179,7 +179,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 	/**
 	 * Inner class RequestListener. This behaviour registers as a user_dispatcher participant
 	 * and keeps the list of participants up to date by managing the information
-	 * received from the ChatManager agent.
+	 * received from the ChatManager agent. It handles receiving the message
 	 */
 	class RequestListener extends CyclicBehaviour {
 		private static final long serialVersionUID = 741233963737842521L;
@@ -226,9 +226,10 @@ public class ClientAgent extends Agent implements ClientInterface {
 		private String sentence;
 		private MessageTemplate template;
 		private int performative;
-		private ChatSpeaker(Agent a, String s) {
+		private ChatSpeaker(Agent a, String s, int thePerformative) {
 			super(a);
 			sentence = s;
+			performative = thePerformative;
 		}
 
 		public void action() {
@@ -238,10 +239,7 @@ public class ClientAgent extends Agent implements ClientInterface {
 				spokenMsg.addReceiver((AID) it.next());
 			}
 			spokenMsg.setContent(sentence);
-			if(sentence.equalsIgnoreCase(UserDispatcherActivity.HELP_MSG)){
-				//Help message should be a REQUEST perforamtive (like request help)
-				spokenMsg.setPerformative(ACLMessage.REQUEST);
-			}
+			spokenMsg.setPerformative(performative);
 			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
 			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
@@ -254,20 +252,18 @@ public class ClientAgent extends Agent implements ClientInterface {
 		private String sentence;
 		private AID recv;
 		private int performative;
-		private ChatSpecificSpeaker(Agent a, String s, AID aid) {
+		private ChatSpecificSpeaker(Agent a, String s, AID aid, int thePerformative) {
 			super(a);
 			sentence = s;
 			recv = aid;
+			performative = thePerformative;
 		}
 
 		public void action() {
 			spokenMsg.clearAllReceiver();
 			spokenMsg.addReceiver(recv);
 			spokenMsg.setContent(sentence);
-			if(sentence.equalsIgnoreCase(UserDispatcherActivity.HELP_MSG)){
-				//Help message should be a REQUEST perforamtive (like request help)
-				spokenMsg.setPerformative(ACLMessage.REQUEST);
-			}
+			spokenMsg.setPerformative(performative);
 			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
 			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
 			send(spokenMsg);
@@ -290,15 +286,15 @@ public class ClientAgent extends Agent implements ClientInterface {
 	// ///////////////////////////////////////
 	// Methods called by the interface
 	// ///////////////////////////////////////
-	public void handleSpoken(String s) {
+	public void handleSpoken(String s, int performative) {
 		// Add a ChatSpeaker behaviour that INFORMs all participants about
 		// the spoken sentence
-		addBehaviour(new ChatSpeaker(this, s));
+		addBehaviour(new ChatSpeaker(this, s, performative));
 	}
 
 
-	public void handleSpoken(String s, AID a) {
-		addBehaviour(new ChatSpecificSpeaker(this,s,a));
+	public void handleSpoken(String s, AID a, int performative) {
+		addBehaviour(new ChatSpecificSpeaker(this,s,a, performative));
 	}
 
 		public String[] getParticipantNames() {

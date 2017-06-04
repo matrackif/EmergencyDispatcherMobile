@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import jade.core.AID;
 import jade.core.MicroRuntime;
 import jade.lang.acl.ACLCodec;
+import jade.lang.acl.ACLMessage;
 import jade.lang.acl.StringACLCodec;
 import jade.util.Logger;
 import jade.wrapper.ControllerException;
@@ -133,7 +134,7 @@ public class ParticipantsActivity extends ListActivity {
 				e.printStackTrace();
 			}
 			if(MainActivity.getType().equalsIgnoreCase(MainActivity.USER)){
-				clientInterface.handleSpoken(UserDispatcherActivity.HELP_MSG, aid_rec);
+				clientInterface.handleSpoken(UserDispatcherActivity.HELP_MSG, aid_rec, ACLMessage.REQUEST);
 			}
 			//TODO if police then maybe send backup?
 			//finish();

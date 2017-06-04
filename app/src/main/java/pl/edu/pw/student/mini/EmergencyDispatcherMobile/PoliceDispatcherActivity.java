@@ -37,7 +37,9 @@ import java.util.logging.Level;
 
 import jade.core.AID;
 import jade.core.MicroRuntime;
+import jade.lang.acl.ACLMessage;
 import jade.util.Logger;
+import jade.util.leap.HashMap;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 
@@ -48,22 +50,21 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     static final int PARTICIPANTS_REQUEST = 0;
     private MyReceiver myReceiver;
     public static final String ACTION_REQUEST_HELP = "jade.demo.user_dispatcher.REQUEST_HELP";
+    private static final String MSG_ACCEPT_HELP_REQUEST = "Help request accepted";
+    private static final String MSG_REJECT_HELP_REQUEST = "Help request rejected";
     private String nickname;
     private String type;
     private ClientInterface clientInterface;
     private GoogleMap mMap;
-    private ArrayList<MarkerOptions> markerOptionsList = new ArrayList<>();
+    private java.util.HashMap<String, MarkerOptions> markerOptionsHashMap = new java.util.HashMap<>(); //Agent name -> agent's marker
     private LocationManager locationManager;
     private LocationListener locationListener;
     private Handler timerHandler = new Handler();
     private Runnable agentLocationUpdaterRunnable = new Runnable() {
         @Override
         public void run() {
-            MarkerOptions currentMarkerOptions = null;
             LatLng latLng = null;
             String agentName = null;
-            String oldAgentName = null;
-            markerOptionsList.clear();
             mMap.clear();
             //clearing the old markers but flickering can be seen cause this method runs every second which is not good
             java.util.HashMap<String, LatLng> agentLocations = MainActivity.getKnownAgentLocations();
@@ -71,14 +72,17 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 latLng = entry.getValue();
                 agentName = entry.getKey();
 
-                //Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + "and at lat/long: " + latLng.latitude + "," + latLng.longitude);
+                Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + "and at lat/long: " + latLng.latitude + "," + latLng.longitude);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(latLng);
                 markerOptions.title(agentName);
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                markerOptionsList.add(markerOptions);
+                markerOptionsHashMap.put(agentName, markerOptions);
+                Marker m = mMap.addMarker(markerOptions);
+                m.setDraggable(true);
             }
-            for (MarkerOptions markerOptions : markerOptionsList) {
+            /*
+            for (Map.Entry<String, MarkerOptions> entry : markerOptionsHashMap.entrySet()) {
 
                 currentMarkerOptions = markerOptions;
                 Marker m = mMap.addMarker(currentMarkerOptions);
@@ -86,6 +90,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 //TODO: We need to make it run only once or when we receive a job so we can accept the job properly.
 
             }
+            */
             timerHandler.postDelayed(this, 1000); //Update locations every second
         }
     };
@@ -101,7 +106,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
             String latLongString = null;
             if (location != null) {
                 latLongString = location.getLatitude() + "_" + location.getLongitude();
-                clientInterface.handleSpoken(latLongString);
+                clientInterface.handleSpoken(latLongString, ACLMessage.INFORM);
             }
             timerHandler.postDelayed(this, 5000); //broadcast location every  5 sec
             //TODO send this info to chat manager and let him broadcast it instead (or maybe not?)
@@ -233,17 +238,22 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
         }
     }
 
-
     private class MyReceiver extends BroadcastReceiver {
 
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(final Context context, Intent intent) {
             String action = intent.getAction();
             logger.log(Level.INFO, "Received intent " + action);
             try {
                 if (action.equalsIgnoreCase(ACTION_REQUEST_HELP)) {
+
+                    java.util.HashMap<String, LatLng> agentLocations = MainActivity.getKnownAgentLocations();
+
                     String sentence = intent.getStringExtra("sentence");
                     final String speaker = sentence.split(":")[0];
+                    //Check if we know the agent's location
+                    final MarkerOptions agentInNeedMarker = markerOptionsHashMap.get(speaker);
+
                     Log.d("MyReceiver", "Agent with name: " + speaker + " needs help.");
                     final AID agentInNeed = new AID(speaker, false);
                     DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -252,14 +262,17 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                             switch (which) {
                                 case DialogInterface.BUTTON_POSITIVE:
                                     //Yes button clicked
-                                    //TODO send REQUEST_ACCEPTED message
-                                    clientInterface.handleSpoken("I will help you", agentInNeed); // This is for testing with the desktop ChatClient
+                                    clientInterface.handleSpoken(MSG_ACCEPT_HELP_REQUEST, agentInNeed, ACLMessage.AGREE); // This is for testing with the desktop ChatClient
+                                    if(agentInNeedMarker != null){
+                                        Toast.makeText(context, "Zooming in to agent's location", Toast.LENGTH_SHORT);
+                                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(agentInNeedMarker.getPosition(), 20));
+                                    }
+
                                     break;
 
                                 case DialogInterface.BUTTON_NEGATIVE:
                                     //No button clicked
-                                    //TODO send REQUEST_REJECTED message
-                                    clientInterface.handleSpoken("I will not help you", agentInNeed); // This is for testing with the desktop ChatClient
+                                    clientInterface.handleSpoken(MSG_REJECT_HELP_REQUEST, agentInNeed, ACLMessage.REFUSE); // This is for testing with the desktop ChatClient
                                     break;
                             }
                         }
@@ -272,7 +285,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
 
                 }
             } catch (Exception e) {
-                Log.e("ERROR", "Could not parse the help message or another error occured: " + e.toString());
+                Log.e("ERROR", "Could not parse the help message or another error occurred: " + e.toString());
             }
         }
     }

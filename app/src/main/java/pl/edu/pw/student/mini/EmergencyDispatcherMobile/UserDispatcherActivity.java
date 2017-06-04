@@ -28,6 +28,7 @@ import android.widget.Toast;
 import java.util.logging.Level;
 
 import jade.core.MicroRuntime;
+import jade.lang.acl.ACLMessage;
 import jade.util.Logger;
 import jade.wrapper.ControllerException;
 import jade.wrapper.O2AException;
@@ -60,7 +61,7 @@ public class UserDispatcherActivity extends Activity {
 			String latLongString = null;
 			if(location != null) {
 				latLongString = location.getLatitude() + "_" + location.getLongitude();
-				clientInterface.handleSpoken(latLongString);
+				clientInterface.handleSpoken(latLongString, ACLMessage.INFORM);
 			}
 			timerHandler.postDelayed(this, 5000); //broadcast location every  5 sec
 			//TODO send this info to chat manager and let him broadcast it instead (or maybe not?)
@@ -134,7 +135,7 @@ public class UserDispatcherActivity extends Activity {
 		public void onClick(View v) {
 				try {
 					Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
-					clientInterface.handleSpoken(HELP_MSG);
+					clientInterface.handleSpoken(HELP_MSG, ACLMessage.REQUEST);
 				} catch (O2AException e) {
 					showAlertDialog(e.getMessage(), false);
 				}
