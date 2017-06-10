@@ -1,19 +1,15 @@
 package pl.edu.pw.student.mini.EmergencyDispatcherMobile;
 
-import android.Manifest;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -134,7 +130,7 @@ public class ParticipantsActivity extends ListActivity {
 				e.printStackTrace();
 			}
 			if(MainActivity.getType().equalsIgnoreCase(MainActivity.USER)){
-				clientInterface.handleSpoken(UserDispatcherActivity.HELP_MSG, aid_rec, ACLMessage.REQUEST);
+				clientInterface.handleSpoken(UserDispatcherActivity.REQUEST_POLICE, aid_rec, ACLMessage.REQUEST);
 			}
 			//TODO if police then maybe send backup?
 			//finish();

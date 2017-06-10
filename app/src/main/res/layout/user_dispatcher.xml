@@ -19,6 +19,35 @@
             android:layout_weight="1"
             android:text="@string/button_police"
             android:textColor="@color/colorAccent" />
-
+        <Button
+            android:id="@+id/button_ambulance"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/Green"
+            android:elevation="5dp"
+            android:layout_weight="1"
+            android:text="@string/button_ambulance"
+            android:textColor="@color/colorAccent" />
+        <Button
+            android:id="@+id/button_electricity"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/Yellow"
+            android:elevation="5dp"
+            android:layout_weight="1"
+            android:text="@string/button_electricity"
+            android:textColor="@color/colorAccent" />
+        <Button
+            android:id="@+id/button_fire"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/Red"
+            android:elevation="5dp"
+            android:layout_weight="1"
+            android:text="@string/button_fire"
+            android:textColor="@color/colorAccent" />
 
 </LinearLayout>

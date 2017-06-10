@@ -48,7 +48,10 @@ public class UserDispatcherActivity extends Activity {
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	private Handler timerHandler = new Handler();
-	public static final String HELP_MSG = "HELP";
+	public static final String REQUEST_POLICE = "REQUESTING_POLICE";
+	public static final String REQUEST_AMBULANCE = "REQUESTING_AMBULANCE";
+	public static final String REQUEST_ELECTRICITY = "REQUESTING_ELECTRICIAN";
+	public static final String REQUEST_FIRE_DEPARTMENT = "REQUESTING_FIREFIGHTER";
 	private Runnable sendCurrentLocationRunnable = new Runnable() {
 		@Override
 		public void run() {
@@ -90,9 +93,19 @@ public class UserDispatcherActivity extends Activity {
 		myReceiver = new MyReceiver();
 
 		setContentView(R.layout.user_dispatcher);
+		//Adding handlers to all the buttons
 
 		Button buttonPolice = (Button) findViewById(R.id.button_police);
 		buttonPolice.setOnClickListener(PoliceSendListener);
+
+		Button buttonAmbulance = (Button) findViewById(R.id.button_ambulance);
+		buttonAmbulance.setOnClickListener(AmbulanceSendListener);
+
+		Button buttonElectricity = (Button) findViewById(R.id.button_electricity);
+		buttonElectricity.setOnClickListener(ElectricitySendListener);
+
+		Button buttonFire = (Button) findViewById(R.id.button_fire);
+		buttonFire.setOnClickListener(FireSendListener);
 
 		locationManager = (LocationManager)
 				getSystemService(Context.LOCATION_SERVICE);
@@ -135,13 +148,42 @@ public class UserDispatcherActivity extends Activity {
 		public void onClick(View v) {
 				try {
 					Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
-					clientInterface.handleSpoken(HELP_MSG, ACLMessage.REQUEST);
+					clientInterface.handleSpoken(REQUEST_POLICE, ACLMessage.REQUEST);
 				} catch (O2AException e) {
 					showAlertDialog(e.getMessage(), false);
 				}
 		}
 	};
-
+	private OnClickListener FireSendListener = new OnClickListener() {
+		public void onClick(View v) {
+			try {
+				Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
+				clientInterface.handleSpoken(REQUEST_FIRE_DEPARTMENT, ACLMessage.REQUEST);
+			} catch (O2AException e) {
+				showAlertDialog(e.getMessage(), false);
+			}
+		}
+	};
+	private OnClickListener ElectricitySendListener = new OnClickListener() {
+		public void onClick(View v) {
+			try {
+				Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
+				clientInterface.handleSpoken(REQUEST_ELECTRICITY, ACLMessage.REQUEST);
+			} catch (O2AException e) {
+				showAlertDialog(e.getMessage(), false);
+			}
+		}
+	};
+	private OnClickListener AmbulanceSendListener = new OnClickListener() {
+		public void onClick(View v) {
+			try {
+				Log.d("PoliceSendListener", "Send help button clicked so we are sending help message now");
+				clientInterface.handleSpoken(REQUEST_AMBULANCE, ACLMessage.REQUEST);
+			} catch (O2AException e) {
+				showAlertDialog(e.getMessage(), false);
+			}
+		}
+	};
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();

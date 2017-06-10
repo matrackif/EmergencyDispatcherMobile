@@ -31,7 +31,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -39,7 +38,6 @@ import jade.core.AID;
 import jade.core.MicroRuntime;
 import jade.lang.acl.ACLMessage;
 import jade.util.Logger;
-import jade.util.leap.HashMap;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 
@@ -59,7 +57,8 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     private java.util.HashMap<String, MarkerOptions> markerOptionsHashMap = new java.util.HashMap<>(); //Agent name -> agent's marker
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private Handler timerHandler = new Handler();
+    private Handler updateAgentLoctionsHandler = new Handler();
+    private Handler sendLocationHandler = new Handler();
     private Runnable agentLocationUpdaterRunnable = new Runnable() {
         @Override
         public void run() {
@@ -72,7 +71,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 latLng = entry.getValue();
                 agentName = entry.getKey();
 
-                Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + "and at lat/long: " + latLng.latitude + "," + latLng.longitude);
+                Log.d("LocationUpdater()", "Found agent with name: " + entry.getKey() + " and at lat/long: " + latLng.latitude + "," + latLng.longitude);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(latLng);
                 markerOptions.title(agentName);
@@ -91,7 +90,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
 
             }
             */
-            timerHandler.postDelayed(this, 1000); //Update locations every second
+            updateAgentLoctionsHandler.postDelayed(this, 1000); //Update locations every second
         }
     };
     private Runnable sendCurrentLocationRunnable = new Runnable() {
@@ -108,7 +107,7 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 latLongString = location.getLatitude() + "_" + location.getLongitude();
                 clientInterface.handleSpoken(latLongString, ACLMessage.INFORM);
             }
-            timerHandler.postDelayed(this, 5000); //broadcast location every  5 sec
+            sendLocationHandler.postDelayed(this, 5000); //broadcast location every  5 sec
             //TODO send this info to chat manager and let him broadcast it instead (or maybe not?)
         }
     };
@@ -171,14 +170,14 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
 
             }
         };
-        timerHandler.post(agentLocationUpdaterRunnable);
-        timerHandler.postDelayed(sendCurrentLocationRunnable, 5000);
+        type.replaceAll("\\s+","");
+        updateAgentLoctionsHandler.post(agentLocationUpdaterRunnable);
+        sendLocationHandler.postDelayed(sendCurrentLocationRunnable, 5000);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        timerHandler.removeCallbacks(agentLocationUpdaterRunnable); // TODO not sure if necessary
     }
 
     @Override
@@ -243,49 +242,60 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
         @Override
         public void onReceive(final Context context, Intent intent) {
             String action = intent.getAction();
+            String msg = intent.getStringExtra("sentence");
+
             logger.log(Level.INFO, "Received intent " + action);
             try {
                 if (action.equalsIgnoreCase(ACTION_REQUEST_HELP)) {
+                    String agentType = msg.split("_")[1];
+                    Log.d("MyReceiver", "Our type is: " + type + " and the request is for: " + agentType);
+                    agentType.replaceAll("\\s+",""); // this removes all whitespace from the string (just in case)
 
-                    java.util.HashMap<String, LatLng> agentLocations = MainActivity.getKnownAgentLocations();
+                    if(type.equalsIgnoreCase(agentType)){
+                        String sentence = intent.getStringExtra("sentence");
+                        final String speaker = sentence.split(":")[0];
+                        //Check if we know the agent's location
+                        Log.d("MyReceiver", "Agent with name: " + speaker + " is requesting " + agentType);
+                        final MarkerOptions agentInNeedMarker = markerOptionsHashMap.get(speaker);
 
-                    String sentence = intent.getStringExtra("sentence");
-                    final String speaker = sentence.split(":")[0];
-                    //Check if we know the agent's location
-                    final MarkerOptions agentInNeedMarker = markerOptionsHashMap.get(speaker);
+                        final AID agentInNeed = new AID(speaker, false);
+                        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case DialogInterface.BUTTON_POSITIVE:
+                                        //Yes button clicked
+                                        clientInterface.handleSpoken(MSG_ACCEPT_HELP_REQUEST, agentInNeed, ACLMessage.AGREE); // This is for testing with the desktop ChatClient
+                                        if(agentInNeedMarker != null){
+                                            Toast.makeText(context, "Zooming in to client's location", Toast.LENGTH_SHORT);
+                                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(agentInNeedMarker.getPosition(), 20));
+                                        }
 
-                    Log.d("MyReceiver", "Agent with name: " + speaker + " needs help.");
-                    final AID agentInNeed = new AID(speaker, false);
-                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            switch (which) {
-                                case DialogInterface.BUTTON_POSITIVE:
-                                    //Yes button clicked
-                                    clientInterface.handleSpoken(MSG_ACCEPT_HELP_REQUEST, agentInNeed, ACLMessage.AGREE); // This is for testing with the desktop ChatClient
-                                    if(agentInNeedMarker != null){
-                                        Toast.makeText(context, "Zooming in to agent's location", Toast.LENGTH_SHORT);
-                                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(agentInNeedMarker.getPosition(), 20));
-                                    }
+                                        break;
 
-                                    break;
-
-                                case DialogInterface.BUTTON_NEGATIVE:
-                                    //No button clicked
-                                    clientInterface.handleSpoken(MSG_REJECT_HELP_REQUEST, agentInNeed, ACLMessage.REFUSE); // This is for testing with the desktop ChatClient
-                                    break;
+                                    case DialogInterface.BUTTON_NEGATIVE:
+                                        //No button clicked
+                                        clientInterface.handleSpoken(MSG_REJECT_HELP_REQUEST, agentInNeed, ACLMessage.REFUSE); // This is for testing with the desktop ChatClient
+                                        break;
+                                }
                             }
-                        }
-                    };
+                        };
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder.setMessage("Client with name " + speaker + " needs help, assist him?").setPositiveButton("Yes", dialogClickListener)
-                            .setNegativeButton("No", dialogClickListener).show();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setMessage("Client with name " + speaker + " needs help, assist him?")
+                                .setPositiveButton("Yes", dialogClickListener)
+                                .setNegativeButton("No", dialogClickListener)
+                                .show();
+                    }
+                    else{
+                        Log.d("MyReceiver", "The string " + type + " is not equal (ignoring case) to the string " + agentType);
+                    }
+
 
 
                 }
             } catch (Exception e) {
-                Log.e("ERROR", "Could not parse the help message or another error occurred: " + e.toString());
+                Log.e("ERROR", "Could not message or another error occurred: " + e.toString());
             }
         }
     }

@@ -14,7 +14,9 @@
     
     <string name="button_login">Login</string>
     <string name="button_police">Send Police!</string>
-
+    <string name="button_ambulance">Send Ambulance!</string>
+    <string name="button_fire">Send Fire Truck!</string>
+    <string name="button_electricity">Send Electricity Services!</string>
     <string name="button_use">Save</string>
 
     <string name="menu_settings">Settings</string>
@@ -33,5 +35,8 @@
     <string-array name="posts_array">
         <item>User</item>
         <item>Police</item>
+        <item>Ambulance</item>
+        <item>Firefighter</item>
+        <item>Electrician</item>
     </string-array>
 </resources>

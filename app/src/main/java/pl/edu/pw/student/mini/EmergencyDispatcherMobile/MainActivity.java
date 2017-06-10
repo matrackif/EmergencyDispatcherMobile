@@ -289,7 +289,7 @@ public class MainActivity extends Activity {
 					MainActivity.this
 							.startActivityForResult(showUserDispatcher, DISPATCH_REQUEST);
 				}
-				if(Objects.equals(type, POLICE))
+				else
 				{
 					Intent showPoliceDispatcher = new Intent(MainActivity.this,
 							PoliceDispatcherActivity.class);
