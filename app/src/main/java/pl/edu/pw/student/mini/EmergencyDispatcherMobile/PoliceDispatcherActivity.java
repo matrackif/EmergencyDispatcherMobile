@@ -170,7 +170,6 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
 
             }
         };
-        type.replaceAll("\\s+","");
         updateAgentLoctionsHandler.post(agentLocationUpdaterRunnable);
         sendLocationHandler.postDelayed(sendCurrentLocationRunnable, 5000);
     }
@@ -249,8 +248,8 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                 if (action.equalsIgnoreCase(ACTION_REQUEST_HELP)) {
                     String agentType = msg.split("_")[1];
                     Log.d("MyReceiver", "Our type is: " + type + " and the request is for: " + agentType);
-                    agentType.replaceAll("\\s+",""); // this removes all whitespace from the string (just in case)
-
+                    type = type.trim();
+                    agentType = agentType.trim();
                     if(type.equalsIgnoreCase(agentType)){
                         String sentence = intent.getStringExtra("sentence");
                         final String speaker = sentence.split(":")[0];
