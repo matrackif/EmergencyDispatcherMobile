@@ -48,8 +48,8 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
     static final int PARTICIPANTS_REQUEST = 0;
     private MyReceiver myReceiver;
     public static final String ACTION_REQUEST_HELP = "jade.demo.user_dispatcher.REQUEST_HELP";
-    private static final String MSG_ACCEPT_HELP_REQUEST = "Help request accepted";
-    private static final String MSG_REJECT_HELP_REQUEST = "Help request rejected";
+    private static final String MSG_ACCEPT_HELP_REQUEST = "Helpaccepted";
+    private static final String MSG_REJECT_HELP_REQUEST = "Helprejected";
     private String nickname;
     private String type;
     private ClientInterface clientInterface;
@@ -264,10 +264,23 @@ public class PoliceDispatcherActivity extends FragmentActivity implements OnMapR
                                 switch (which) {
                                     case DialogInterface.BUTTON_POSITIVE:
                                         //Yes button clicked
-                                        clientInterface.handleSpoken(MSG_ACCEPT_HELP_REQUEST, agentInNeed, ACLMessage.AGREE); // This is for testing with the desktop ChatClient
-                                        if(agentInNeedMarker != null){
-                                            Toast.makeText(context, "Zooming in to client's location", Toast.LENGTH_SHORT);
-                                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(agentInNeedMarker.getPosition(), 20));
+                                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                            //If location permission is not allowed handle it here
+
+                                        }
+                                        else{
+                                            Location ourLocation = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+                                            LatLng agentsLatLng = agentInNeedMarker.getPosition();
+                                            Location agentsLocation = new Location(LocationManager.GPS_PROVIDER);
+                                            agentsLocation.setLatitude(agentsLatLng.latitude);
+                                            agentsLocation.setLongitude(agentsLatLng.longitude);
+                                            String distanceMsg = "";
+                                            distanceMsg += ourLocation.distanceTo(agentsLocation);
+                                            clientInterface.handleSpoken(MSG_ACCEPT_HELP_REQUEST + "_" + distanceMsg, agentInNeed, ACLMessage.AGREE); // This is for testing with the desktop ChatClient
+                                            if(agentInNeedMarker != null){
+                                                Toast.makeText(context, "Zooming in to client's location", Toast.LENGTH_SHORT);
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(agentInNeedMarker.getPosition(), 20));
+                                            }
                                         }
 
                                         break;

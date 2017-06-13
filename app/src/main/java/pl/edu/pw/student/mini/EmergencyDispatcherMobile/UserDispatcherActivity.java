@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -24,6 +25,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
 
 import java.util.logging.Level;
 
@@ -52,6 +55,8 @@ public class UserDispatcherActivity extends Activity {
 	public static final String REQUEST_AMBULANCE = "REQUESTING_AMBULANCE";
 	public static final String REQUEST_ELECTRICITY = "REQUESTING_ELECTRICIAN";
 	public static final String REQUEST_FIRE_DEPARTMENT = "REQUESTING_FIREFIGHTER";
+	public static final String ACTION_HELP_ARRIVING = "HELP_WILL_ARRIVE";
+
 	private Runnable sendCurrentLocationRunnable = new Runnable() {
 		@Override
 		public void run() {
@@ -91,6 +96,9 @@ public class UserDispatcherActivity extends Activity {
 		}
 
 		myReceiver = new MyReceiver();
+		IntentFilter helpArrivingFilter = new IntentFilter();
+		helpArrivingFilter.addAction(ACTION_HELP_ARRIVING);
+		registerReceiver(myReceiver, helpArrivingFilter);
 
 		setContentView(R.layout.user_dispatcher);
 		//Adding handlers to all the buttons
@@ -217,6 +225,24 @@ public class UserDispatcherActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			logger.log(Level.INFO, "Received intent " + action);
+			if(action.equalsIgnoreCase(ACTION_HELP_ARRIVING)){
+				String acceptHelpMessage = intent.getStringExtra("sentence");
+				String distanceToHelp = acceptHelpMessage.split("_")[1];
+				DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						switch (which) {
+							case DialogInterface.BUTTON_POSITIVE:
+								break;
+						}
+					}
+				};
+
+				AlertDialog.Builder builder = new AlertDialog.Builder(context);
+				builder.setMessage("Help is on the way! They are " + distanceToHelp + "m away")
+						.setPositiveButton("OK", dialogClickListener)
+						.show();
+			}
 
 		}
 	}

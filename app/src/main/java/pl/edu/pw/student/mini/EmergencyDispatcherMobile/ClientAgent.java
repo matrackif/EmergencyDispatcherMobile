@@ -206,9 +206,12 @@ public class ClientAgent extends Agent implements ClientInterface {
 					// A user is requesting help
 					handleReceivedMessage(msg.getSender().getLocalName(), msg.getContent(), PoliceDispatcherActivity.ACTION_REQUEST_HELP);
 				}
-				else {
-					handleUnexpected(msg);
+				else if(msg.getPerformative() == ACLMessage.AGREE){
+					handleReceivedMessage(msg.getSender().getLocalName(), msg.getContent(), UserDispatcherActivity.ACTION_HELP_ARRIVING);
 				}
+				else{
+                    handleUnexpected(msg);
+                }
 			}
 
 			else {
@@ -242,6 +245,11 @@ public class ClientAgent extends Agent implements ClientInterface {
 			spokenMsg.setPerformative(performative);
 			// I commented this line below because we didn't need it, the MainActivity didn't even handle it
 			//handleReceivedMessage(myAgent.getLocalName(), sentence, null);
+
+
+            //Also send message to chat manager:
+            spokenMsg.addReceiver(new AID(CHAT_MANAGER_NAME, AID.ISLOCALNAME));
+
 			send(spokenMsg);
 			spokenMsg.setPerformative(ACLMessage.INFORM);
 			//After sending message set performative back to INFORM so we can send lat/longs again
